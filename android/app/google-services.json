@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "80974803174",
+    "project_id": "mgacs-residentapp",
+    "storage_bucket": "mgacs-residentapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:80974803174:android:9e232f1b930e015ec04b27",
+        "android_client_info": {
+          "package_name": "com.mgacs_resident"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8E9ybj8LoyPqRO7jEuVxNpH4WOwVZ4VA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
