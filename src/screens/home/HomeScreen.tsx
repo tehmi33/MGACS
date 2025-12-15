@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { AuthContext } from "../../context/AuthContext";
 import BiometricEnableModal from "../../components/BiometricEnableModal";
 import { deviceHasBiometricSupport } from "../../utils/biometricAuth";
+import { useNavigation } from "@react-navigation/native";
 
 
 const HomeScreen: React.FC = () => {
+  const navigation=useNavigation();
   const { user, logout, enableBiometricLogin, biometricEnabled , untrustAllDevices} = useContext(AuthContext);
 
   const [showModal, setShowModal] = useState(false);
@@ -59,6 +61,9 @@ const HomeScreen: React.FC = () => {
       </TouchableOpacity>
       <TouchableOpacity style={styles.logoutBtn} onPress={untrustAllDevices}>
         <Text style={styles.logoutText}>Untrusted</Text>
+      </TouchableOpacity>
+       <TouchableOpacity style={styles.logoutBtn} onPress={()=>{navigation.navigate("VisitorRequestScreen")}}>
+        <Text style={styles.logoutText}>formhook</Text>
       </TouchableOpacity>
 
       <BiometricEnableModal

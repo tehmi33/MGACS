@@ -10,6 +10,7 @@ import RNBootSplash from "react-native-bootsplash";
 import { setFcmToken } from './src/utils/fcmToken';
 
 
+
 const App = () => {
 
 
@@ -92,6 +93,7 @@ const App = () => {
         </NavigationContainer>
       </AuthProvider>
     </GestureHandlerRootView>
+   
   );
 };
 
