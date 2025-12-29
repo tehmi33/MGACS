@@ -1,45 +1,51 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet , TextInput} from 'react-native';
 import { Controller, Control } from 'react-hook-form';
-import { TextInput } from 'react-native-paper';
+
 
 interface Props {
   control: Control<any>;
+  name: string;
+  placeholder: string;
 }
 
-export default function VisitorDestinationInput({ control }: Props) {
+export default function VisitorDestinationInput({
+  control,
+  name,
+  placeholder,
+}: Props) {
   return (
     <Controller
       control={control}
-      name="destination"
-      rules={{ required: 'Destination is required' }}
-      render={({ field: { onChange, value }, fieldState }) => (
-        <View style={styles.wrapper}>
-          <Text style={styles.label}>Visitor Destination</Text>
-
-          <TextInput
-            mode="outlined"
-            multiline
-            numberOfLines={4}
-            value={value ?? ''}
-            onChangeText={onChange}
-            style={styles.input}
-            outlineColor="#cbd5e1"
-            activeOutlineColor="#2563eb"
-          />
-
-          {fieldState.error && (
-            <Text style={styles.errorText}>{fieldState.error.message}</Text>
-          )}
-        </View>
+      name={name}
+      rules={{ required: true }}
+      render={({ field: { onChange, value } }) => (
+        <TextInput
+          // mode="outlined"
+          multiline
+          numberOfLines={4}
+          placeholder={placeholder}
+          placeholderTextColor="#94a3b8"
+          value={value ?? ''}
+          onChangeText={onChange}
+          style={styles.input}
+        />
       )}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginTop: 16 },
-  label: {  fontWeight: '600', marginBottom: 6, color: '#334155' },
-  input: { backgroundColor: '#fff', paddingTop:10 , color: '#0f172a' },
-  errorText: { color: 'red', fontSize: 12, marginTop: 4 },
+  input: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 16,
+    color: '#000',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginTop: 10,
+    height: 70,
+    textAlignVertical: 'top',
+  },
 });

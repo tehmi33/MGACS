@@ -3,26 +3,33 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface Props {
-  value: Date | undefined;
+  value?: Date;
   onChange: (date: Date) => void;
   error?: string;
+  label?: string;
+  placeholder?: string;
 }
 
-export const FormDateTime = ({ value, onChange, error }: Props) => {
+export const FormDateTime = ({
+  value,
+  onChange,
+  error,
+  label,
+  placeholder = "Tap to select date & time",
+  
+}: Props) => {
   const [showPicker, setShowPicker] = useState(false);
   const [mode, setMode] = useState<"date" | "time">("date");
 
-  const currentValue = value || new Date();
+  const currentValue = value ?? new Date();
 
-  const handleChange = (event: any, selectedValue?: Date) => {
-    if (event.type === "dismissed") {
+  const handleChange = (_: any, selectedValue?: Date) => {
+    if (!selectedValue) {
       setShowPicker(false);
+      setMode("date");
       return;
     }
 
-    if (!selectedValue) return;
-
-    // STEP 1: If selecting date → update date and open time picker
     if (mode === "date") {
       const updated = new Date(currentValue);
       updated.setFullYear(
@@ -31,15 +38,12 @@ export const FormDateTime = ({ value, onChange, error }: Props) => {
         selectedValue.getDate()
       );
 
-      // Open TIME picker after selecting date
       setMode("time");
       setShowPicker(true);
-
       onChange(updated);
       return;
     }
 
-    // STEP 2: If selecting time → update time and close picker
     if (mode === "time") {
       const updated = new Date(currentValue);
       updated.setHours(
@@ -50,27 +54,24 @@ export const FormDateTime = ({ value, onChange, error }: Props) => {
       );
 
       setShowPicker(false);
-      setMode("date"); // reset for next time
-
+      setMode("date");
       onChange(updated);
-      return;
     }
   };
 
-  const openPicker = () => {
-    setMode("date");
-    setShowPicker(true);
-  };
-
   return (
-    <View style={{ marginBottom: 20 }}>
-      <Text style={styles.label}>Select Date & Time</Text>
+    <View style={{ paddingBottom: 10  }}>
 
-      <TouchableOpacity style={styles.selector} onPress={openPicker}>
+
+      <TouchableOpacity
+        style={styles.selector}
+        onPress={() => {
+          setMode("date");
+          setShowPicker(true);
+        }}
+      >
         <Text style={styles.selectorText}>
-          {value
-            ? value.toLocaleString() // Date + Time combined
-            : "Tap to select date & time"}
+          {value ? value.toLocaleString() : placeholder}
         </Text>
       </TouchableOpacity>
 
@@ -78,9 +79,11 @@ export const FormDateTime = ({ value, onChange, error }: Props) => {
 
       {showPicker && (
         <DateTimePicker
+          
           value={currentValue}
           mode={mode}
           display="default"
+          minuteInterval={5}
           onChange={handleChange}
         />
       )}
@@ -89,20 +92,18 @@ export const FormDateTime = ({ value, onChange, error }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  label: {
-    marginBottom: 6,
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
-  },
+
   selector: {
-    padding: 14,
-    backgroundColor: "#F0F0F0",
+    padding: 16,
+    backgroundColor: "white",
     borderRadius: 8,
     marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
   },
   selectorText: {
-    color: "#333",
+    color: "#000",
+    fontSize: 14,
   },
   error: {
     color: "red",

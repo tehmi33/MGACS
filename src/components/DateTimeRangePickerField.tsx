@@ -1,50 +1,52 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Controller, Control } from 'react-hook-form';
-import {
-  DatePickerModal,
-  TimePickerModal,
-} from 'react-native-paper-dates';
+import { DatePickerModal, TimePickerModal } from 'react-native-paper-dates';
 
 interface Props {
   control: Control<any>;
+  name: string;
+  placeholder: string;
 }
 
-export default function DateTimeRangePickerField({ control }: Props) {
+export default function DateTimeRangePickerField({
+  control,
+  name,
+  placeholder,
+}: Props) {
   const [dateVisible, setDateVisible] = useState(false);
   const [timeVisible, setTimeVisible] = useState(false);
-
-  // Temporary selected date
   const [tempDate, setTempDate] = useState<Date | null>(null);
+
+  // ✅ today at 00:00 (used for minDate)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   return (
     <Controller
-      name="visitDateTime"
+      name={name}
       control={control}
-      rules={{ required: 'Date & time is required' }}
+      rules={{ required: true }}
       defaultValue={null}
-      render={({ field: { value, onChange }, fieldState }) => {
-        const format = (date: Date) =>
-          `${date.toDateString()} ${date.toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}`;
+      render={({ field: { value, onChange } }) => {
+        const displayValue =
+          value instanceof Date
+            ? `${value.toDateString()} ${value.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}`
+            : placeholder;
 
         return (
-          <View style={styles.container}>
-            <Text style={styles.label}>Visit Date & Time</Text>
-
-            {/* SINGLE FIELD */}
+          <View style={styles.wrapper}>
             <TouchableOpacity
-              style={[
-                styles.field,
-                fieldState.error && styles.errorBorder,
-              ]}
-              onPress={() => setDateVisible(true)}
+              style={styles.field}
+              onPress={() => {
+                setTempDate(value ?? null); 
+                setDateVisible(true);
+              }}
             >
-              <Text style={styles.text}>
-                {value ? format(value) : 'Select date & time'}
-              </Text>
+              <Text style={styles.text}>{displayValue}</Text>
             </TouchableOpacity>
 
             {/* DATE PICKER */}
@@ -53,37 +55,39 @@ export default function DateTimeRangePickerField({ control }: Props) {
               mode="single"
               visible={dateVisible}
               date={tempDate ?? undefined}
+              validRange={{
+                startDate: today, 
+              }}
               onDismiss={() => setDateVisible(false)}
-              onConfirm={({ date }) => {
-                setDateVisible(false);
+              onChange={({ date }) => {
                 if (!date) return;
-                setTempDate(date);
+
+                const selectedDate = new Date(date);
+                selectedDate.setHours(0, 0, 0, 0);
+
+                setDateVisible(false);
+                setTempDate(selectedDate);
+                onChange(selectedDate);
                 setTimeVisible(true);
               }}
             />
 
             {/* TIME PICKER */}
             <TimePickerModal
-              visible={timeVisible}
-              onDismiss={() => setTimeVisible(false)}
-              onConfirm={({ hours, minutes }) => {
-                setTimeVisible(false);
-                if (!tempDate) return;
+  visible={timeVisible}
+  onDismiss={() => setTimeVisible(false)}
+  // minutesStep={5} // ✅ 00, 05, 10, 15, 20...
+  onConfirm={({ hours, minutes }) => {
+    if (!tempDate) return;
 
-                const finalDate = new Date(tempDate);
-                finalDate.setHours(hours);
-                finalDate.setMinutes(minutes);
-                finalDate.setSeconds(0);
+    const finalDate = new Date(tempDate);
+    finalDate.setHours(hours, minutes, 0);
 
-                onChange(finalDate);
-              }}
-            />
+    setTimeVisible(false);
+    onChange(finalDate);
+  }}
+/>
 
-            {fieldState.error && (
-              <Text style={styles.errorText}>
-                {fieldState.error.message}
-              </Text>
-            )}
           </View>
         );
       }}
@@ -92,33 +96,16 @@ export default function DateTimeRangePickerField({ control }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#334155',
-  },
+  wrapper: { marginBottom: 12 },
   field: {
-    padding: 15,
-    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#cbd5e1',
+    borderRadius: 10,
+    padding: 14,
     backgroundColor: '#fff',
   },
   text: {
-    fontSize: 15,
-    color: '#0f172a',
     textAlign: 'center',
-  },
-  errorText: {
-    fontSize: 12,
-    color: 'red',
-    marginTop: 4,
-  },
-  errorBorder: {
-    borderColor: 'red',
+    color: '#0f172a',
   },
 });

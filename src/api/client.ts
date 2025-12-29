@@ -20,6 +20,7 @@ const api = axios.create({
 api.interceptors.request.use(async (config) => {
   // const token = await AsyncStorage.getItem("token");
   const deviceId = await DeviceInfo.getUniqueId();
+  const deviceModel = await DeviceInfo.getModel();
   const fcmToken = getCachedFcmToken();
 
   // Attach token
@@ -38,6 +39,7 @@ api.interceptors.request.use(async (config) => {
   config.data = {
     ...(config.data || {}),
     device_id: deviceId,
+    device_model: deviceModel,
   };
 
   // Debug Logging
@@ -47,6 +49,7 @@ api.interceptors.request.use(async (config) => {
     console.log("➡ METHOD:", config.method?.toUpperCase());
     console.log("➡ HEADERS:", config.headers);
     console.log("➡ PAYLOAD:", config.data);
+    console.log('Modal device id:', deviceModel);
   }
 
   return config;

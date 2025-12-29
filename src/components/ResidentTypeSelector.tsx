@@ -1,38 +1,66 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import { RadioButton } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { RadioButton, Text } from 'react-native-paper';
 import { Control, Controller } from 'react-hook-form';
+import { ResidentType, ResidentTypeOption } from '../types/VisitorRequest';
+
 interface Props {
   control: Control<any>;
+  name: string;
+  options: ResidentTypeOption[];
 }
-const options = [
-  { label: 'Family (48 hours)', value: 'family', hours: 48 },
-  { label: 'Utility (12 hours)', value: 'utility', hours: 12 },
-  { label: 'Commercial (6 hours)', value: 'commercial', hours: 6 },
-];
 
-export default function ResidentTypeSelector({ control }: Props) {
+export default function ResidentTypeSelector({
+  control,
+  name,
+  options,
+}: Props) {
   return (
-    <Controller
-      control={control}
-      name="residentType"
-      rules={{ required: 'Resident type required' }}
-      render={({ field: { onChange, value } }) => (
-        <View>
-          <Text style={{ fontWeight: '600', marginBottom: 8 }}>
-            Request Type
-          </Text>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <Controller
+        control={control}
+        name={name}
+        rules={{ required: 'Resident type is required' }}
+        render={({ field: { value, onChange } }) => (
           <RadioButton.Group onValueChange={onChange} value={value}>
-            {options.map(opt => (
-              <RadioButton.Item
-                key={opt.value}
-                label={opt.label}
-                value={opt.value}
-              />
-            ))}
+            <View style={styles.row}>
+              {options.map(opt => (
+                <View key={opt.value} style={styles.option}>
+                  <RadioButton value={opt.value} />
+                  <TouchableOpacity onPress={() => onChange(opt.value)}>
+                    <Text style={styles.label}>{opt.label}</Text>
+                    <Text style={styles.hours}>({opt.hours} hrs)</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
           </RadioButton.Group>
-        </View>
-      )}
-    />
+        )}
+      />
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    marginBottom: 12,
+    gap: 20,
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  hours: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: -2,
+  },
+});

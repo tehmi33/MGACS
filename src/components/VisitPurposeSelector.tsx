@@ -1,54 +1,84 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { Controller, Control, useWatch } from 'react-hook-form';
 import { Dropdown } from 'react-native-element-dropdown';
 import { Checkbox } from 'react-native-paper';
 
-interface Props {
-  control: Control<any>;
+interface Option {
+  label: string;
+  value: string;
 }
 
-const purposes = [
-  { label: 'Friend', value: 'friend' },
-  { label: 'Relative', value: 'relative' },
-  { label: 'Delivery', value: 'delivery' },
-];
+interface Props {
+  control: Control<any>;
+  name: string;              // main dropdown field name
+  otherName: string;         // text input field name
+  isOtherName: string;       // checkbox field name
+  label?: string;
+  placeholder: string;
+  otherPlaceholder?: string;
+  data: Option[];
+}
 
-export default function VisitPurposeSelector({ control }: Props) {
-  const isOther = useWatch({ control, name: 'isOther', defaultValue: false });
+export default function DropdownWithOther({
+  control,
+  name,
+  otherName,
+  isOtherName,
+  placeholder,
+  otherPlaceholder = 'Enter other',
+  data,
+}: Props) {
+  const isOther = useWatch({
+    control,
+    name: isOtherName,
+    defaultValue: false,
+  });
 
   return (
     <View style={styles.wrapper}>
-      <Text style={styles.label}>Visit Purpose / Relationship</Text>
 
-      {/* ROW */}
       <View style={styles.row}>
+        {/* Dropdown / Other Input */}
         <Controller
           control={control}
-          name="visitPurpose"
-          rules={{ required: 'Purpose required' }}
+          name={isOther ? otherName : name}
+          rules={{
+            required: isOther ? 'Please specify other' : 'This field is required',
+          }}
           render={({ field: { onChange, value }, fieldState }) => (
             <View style={{ flex: 1 }}>
-              <Dropdown
-                style={[
-                  styles.input,
-                  fieldState.error && styles.errorBorder,
-                ]}
-                data={purposes}
-                labelField="label"
-                valueField="value"
-                placeholder="Select purpose"
-                value={value}
-                onChange={item => onChange(item.value)}
-              />
+              {!isOther ? (
+                <Dropdown
+                  style={[styles.input, fieldState.error && styles.errorBorder]}
+                  data={data}
+                  labelField="label"
+                  valueField="value"
+                  placeholder={placeholder}
+                  value={value}
+                  onChange={item => onChange(item.value)}
+                  onChangeText={onChange}
+                   itemTextStyle={styles.itemText}
+  selectedTextStyle={styles.selectedText}
+  placeholderStyle={styles.placeholderText}
+                />
+              ) : (
+                <TextInput
+                  style={[styles.input, fieldState.error && styles.errorBorder]}
+                  placeholder={otherPlaceholder}
+                  placeholderTextColor="#64748b"
+                  value={value}
+                  
+                />
+              )}
             </View>
           )}
         />
 
-        {/* OTHER */}
+        {/* Other Checkbox */}
         <Controller
           control={control}
-          name="isOther"
+          name={isOtherName}
           render={({ field: { onChange, value } }) => (
             <View style={styles.otherBox}>
               <Checkbox
@@ -60,34 +90,20 @@ export default function VisitPurposeSelector({ control }: Props) {
           )}
         />
       </View>
-
-      {/* OTHER INPUT */}
-      {/* {isOther && (
-        <Controller
-          control={control}
-          name="otherPurpose"
-          rules={{ required: 'Please specify other' }}
-          render={({ field: { onChange, value } }) => (
-            <View style={{ marginTop: 10 }}>
-              <Dropdown
-                style={styles.input}
-                data={[]}
-                placeholder="Enter other purpose"
-                value={value}
-                onChange={() => {}}
-              />
-            </View>
-          )}
-        />
-      )} */}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginTop: 16 },
-  label: { fontWeight: '600', marginBottom: 6, color: '#334155' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  wrapper: {
+    marginBottom: 20,
+  },
+ 
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   input: {
     height: 52,
     borderWidth: 1,
@@ -95,7 +111,31 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 14,
     backgroundColor: '#fff',
+    color: '#000',
   },
-  otherBox: { flexDirection: 'row', alignItems: 'center' },
-  errorBorder: { borderColor: 'red' },
+  otherBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  errorBorder: {
+    borderColor: 'red',
+  },
+  
+itemText: {
+    fontSize: 14,        // smaller font
+    color: '#0f172a',
+  },
+
+  // 👇 Selected value shown in input
+  selectedText: {
+    fontSize: 14,
+    color: '#0f172a',
+  },
+
+  // 👇 Placeholder text
+  placeholderText: {
+    fontSize: 14,
+    color: '#94a3b8',
+  },
 });
