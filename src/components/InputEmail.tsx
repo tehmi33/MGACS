@@ -1,5 +1,8 @@
 import React from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
+ import { useTheme } from '../theme/ThemeContext';
+import { AppStyles } from '../styles/AppStyles';
+
 
 interface InputEmailProps {
   placeholder: string;
@@ -9,13 +12,15 @@ interface InputEmailProps {
 }
 
 const InputEmail: React.FC<InputEmailProps> = ({ placeholder, onchangeText, value, keyboardType }) => {
+   const theme = useTheme();
+    const appstyles = AppStyles(theme);
   return (
-    <View style={styles.container}>
+   <View style={appstyles.inputContainer}>
       <TextInput
         placeholder={placeholder}
         keyboardType={keyboardType}
-        style={styles.input}
-        placeholderTextColor="#9E9E9E"
+        style={appstyles.textInput}
+        placeholderTextColor={theme.colors.placeholder}
         onChangeText={onchangeText}
         value={value}
       />
@@ -25,26 +30,3 @@ const InputEmail: React.FC<InputEmailProps> = ({ placeholder, onchangeText, valu
 
 export default InputEmail;
 
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    borderColor:'#E0E0E0',
-    borderWidth:1,
-    borderRadius:10,
-    marginVertical: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 1,
-  },
-  input: {
-    height: 50,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    fontSize: 14,
-    fontWeight: '400',
-    color: 'black',
-    fontFamily: 'Roboto',
-  },
-});

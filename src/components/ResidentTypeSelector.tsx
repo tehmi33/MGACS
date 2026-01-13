@@ -1,38 +1,95 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import { RadioButton } from 'react-native-paper';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { RadioButton, Text } from 'react-native-paper';
 import { Control, Controller } from 'react-hook-form';
+import { ResidentTypeOption } from '../types/VisitorRequest';
+import { useTheme } from '../theme/ThemeContext';
+import { AppStyles } from '../styles/AppStyles';
+import { Theme } from '../theme/themes';
+
 interface Props {
   control: Control<any>;
+  name: string;
+  options: ResidentTypeOption[];
 }
-const options = [
-  { label: 'Family (48 hours)', value: 'family', hours: 48 },
-  { label: 'Utility (12 hours)', value: 'utility', hours: 12 },
-  { label: 'Commercial (6 hours)', value: 'commercial', hours: 6 },
-];
 
-export default function ResidentTypeSelector({ control }: Props) {
+export default function ResidentTypeSelector({
+  control,
+  name,
+  options,
+}: Props) {
+  const theme = useTheme();
+  const appStyles = AppStyles(theme);
+  const styles = createStyles(theme);
+
   return (
-    <Controller
-      control={control}
-      name="residentType"
-      rules={{ required: 'Resident type required' }}
-      render={({ field: { onChange, value } }) => (
-        <View>
-          <Text style={{ fontWeight: '600', marginBottom: 8 }}>
-            Request Type
-          </Text>
-          <RadioButton.Group onValueChange={onChange} value={value}>
-            {options.map(opt => (
-              <RadioButton.Item
-                key={opt.value}
-                label={opt.label}
-                value={opt.value}
-              />
-            ))}
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <Controller
+        control={control}
+        name={name}
+        rules={{ required: 'Resident type is required' }}
+        render={({ field: { value, onChange } }) => (
+          <RadioButton.Group
+            onValueChange={onChange}
+            value={value}
+          >
+            <View style={styles.row}>
+              {options.map(opt => (
+                <View key={opt.value} style={styles.option}>
+                  <RadioButton
+                    value={opt.value}
+                    color={theme.colors.primary}
+                    uncheckedColor={theme.colors.muted}
+                  />
+
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => onChange(opt.value)}
+                  >
+                    <Text
+                      style={[
+                        appStyles.textInput,
+                        styles.label,
+                      ]}
+                    >
+                      {opt.label}
+                    </Text>
+
+                    <Text style={appStyles.mutedText}>
+                      ({opt.hours})
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
           </RadioButton.Group>
-        </View>
-      )}
-    />
+        )}
+      />
+    </ScrollView>
   );
 }
+
+/* ---------------- STYLES ---------------- */
+
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 20,
+    },
+    option: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginRight: 15,
+    },
+    label: {
+      fontWeight: '600',
+      color: theme.colors.text,
+    },
+  });

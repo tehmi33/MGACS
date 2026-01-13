@@ -1,45 +1,63 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import { Controller, Control } from 'react-hook-form';
-import { TextInput } from 'react-native-paper';
+import { useTheme } from '../theme/ThemeContext';
+import { AppStyles } from '../styles/AppStyles';
+import { Theme } from '../theme/themes';
 
 interface Props {
   control: Control<any>;
+  name: string;
+  placeholder: string;
 }
 
-export default function VisitorDestinationInput({ control }: Props) {
+export default function VisitorDestinationInput({
+  control,
+  name,
+  placeholder,
+}: Props) {
+  const theme = useTheme();
+  const appStyles = AppStyles(theme);
+  const styles = createStyles(theme);
+
   return (
     <Controller
       control={control}
-      name="destination"
-      rules={{ required: 'Destination is required' }}
+      name={name}
+      rules={{ required: true }}
       render={({ field: { onChange, value }, fieldState }) => (
-        <View style={styles.wrapper}>
-          <Text style={styles.label}>Visitor Destination</Text>
-
+        <View
+          style={[
+            appStyles.inputContainer,
+            styles.container,
+            fieldState.error && appStyles.errorBorder,
+          ]}
+        >
           <TextInput
-            mode="outlined"
             multiline
             numberOfLines={4}
+            placeholder={placeholder}
+            placeholderTextColor={theme.colors.placeholder}
             value={value ?? ''}
             onChangeText={onChange}
-            style={styles.input}
-            outlineColor="#cbd5e1"
-            activeOutlineColor="#2563eb"
+            style={[appStyles.textInput, styles.input]}
           />
-
-          {fieldState.error && (
-            <Text style={styles.errorText}>{fieldState.error.message}</Text>
-          )}
         </View>
       )}
     />
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: { marginTop: 16 },
-  label: {  fontWeight: '600', marginBottom: 6, color: '#334155' },
-  input: { backgroundColor: '#fff', paddingTop:10 , color: '#0f172a' },
-  errorText: { color: 'red', fontSize: 12, marginTop: 4 },
-});
+/* ---------------- STYLES ---------------- */
+
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      minHeight: 80,
+      marginTop: 0,
+    },
+    input: {
+      flex: 1,
+      textAlignVertical: 'top',
+    },
+  });

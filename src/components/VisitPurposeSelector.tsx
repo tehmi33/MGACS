@@ -1,101 +1,177 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { Controller, Control, useWatch } from 'react-hook-form';
 import { Dropdown } from 'react-native-element-dropdown';
 import { Checkbox } from 'react-native-paper';
+import { useTheme } from '../theme/ThemeContext';
+import { AppStyles } from '../styles/AppStyles';
+import { Theme } from '../theme/themes';
+
+interface Option {
+  label: string;
+  value: string;
+}
 
 interface Props {
   control: Control<any>;
+  name: string;
+  otherName: string;
+  isOtherName: string;
+  label?: string;
+  placeholder: string;
+  otherPlaceholder?: string;
+  data: Option[];
 }
 
-const purposes = [
-  { label: 'Friend', value: 'friend' },
-  { label: 'Relative', value: 'relative' },
-  { label: 'Delivery', value: 'delivery' },
-];
+export default function DropdownWithOther({
+  control,
+  name,
+  otherName,
+  isOtherName,
+  placeholder,
+  otherPlaceholder = 'Enter other',
+  data,
+}: Props) {
+  const theme = useTheme();
+  const appStyles = AppStyles(theme);
+  const styles = createStyles(theme);
 
-export default function VisitPurposeSelector({ control }: Props) {
-  const isOther = useWatch({ control, name: 'isOther', defaultValue: false });
+  const isOther = useWatch({
+    control,
+    name: isOtherName,
+    defaultValue: false,
+  });
 
   return (
-    <View style={styles.wrapper}>
-      <Text style={styles.label}>Visit Purpose / Relationship</Text>
-
-      {/* ROW */}
-      <View style={styles.row}>
-        <Controller
-          control={control}
-          name="visitPurpose"
-          rules={{ required: 'Purpose required' }}
-          render={({ field: { onChange, value }, fieldState }) => (
-            <View style={{ flex: 1 }}>
-              <Dropdown
+    <View style={[styles.row, { marginVertical: 15 }]}>
+      <View style={{ flex: 1 }}>
+        {/* DROPDOWN CONTROLLER */}
+        {!isOther && (
+          <Controller
+            control={control}
+            name={name}
+            rules={{ required: 'This field is required' }}
+            render={({ field: { onChange, value }, fieldState }) => (
+              <View
                 style={[
-                  styles.input,
-                  fieldState.error && styles.errorBorder,
+                  appStyles.dropdownContainer,
+                  fieldState.error && appStyles.errorBorder,
                 ]}
-                data={purposes}
-                labelField="label"
-                valueField="value"
-                placeholder="Select purpose"
-                value={value}
-                onChange={item => onChange(item.value)}
-              />
-            </View>
-          )}
-        />
+              >
+                <Dropdown
+                  style={styles.dropdown}
+                  containerStyle={styles.dropdownList}
+                  data={data}
+                  labelField="label"
+                  valueField="value"
+                  placeholder={placeholder}
+                  value={value}
+                  onChange={item => onChange(item.value)}
+                  itemTextStyle={[
+                    appStyles.textInput,
+                    styles.itemText,
+                  ]}
+                  selectedTextStyle={[
+                    appStyles.textInput,
+                    styles.itemText,
+                  ]}
+                  placeholderStyle={appStyles.mutedText}
+                  activeColor={theme.colors.infoLight}
+                />
+              </View>
+            )}
+          />
+        )}
 
-        {/* OTHER */}
-        <Controller
-          control={control}
-          name="isOther"
-          render={({ field: { onChange, value } }) => (
-            <View style={styles.otherBox}>
-              <Checkbox
-                status={value ? 'checked' : 'unchecked'}
-                onPress={() => onChange(!value)}
-              />
-              <Text>Other</Text>
-            </View>
-          )}
-        />
+        {/* OTHER TEXTINPUT CONTROLLER */}
+        {isOther && (
+          <Controller
+            control={control}
+            name={otherName}
+            rules={{ required: 'Please specify other' }}
+            render={({ field: { onChange, value }, fieldState }) => (
+              <View
+                style={[
+                  appStyles.dropdownContainer,
+                  fieldState.error && appStyles.errorBorder,
+                ]}
+              >
+                <TextInput
+                  style={[
+                    appStyles.textInput,
+                    styles.otherInput,
+                  ]}
+                  placeholder={otherPlaceholder}
+                  placeholderTextColor={theme.colors.placeholder}
+                  value={value}
+                  onChangeText={onChange}
+                />
+              </View>
+            )}
+          />
+        )}
       </View>
 
-      {/* OTHER INPUT */}
-      {/* {isOther && (
-        <Controller
-          control={control}
-          name="otherPurpose"
-          rules={{ required: 'Please specify other' }}
-          render={({ field: { onChange, value } }) => (
-            <View style={{ marginTop: 10 }}>
-              <Dropdown
-                style={styles.input}
-                data={[]}
-                placeholder="Enter other purpose"
-                value={value}
-                onChange={() => {}}
-              />
-            </View>
-          )}
-        />
-      )} */}
+      {/* OTHER CHECKBOX */}
+      <Controller
+        control={control}
+        name={isOtherName}
+        render={({ field: { onChange, value } }) => (
+          <View style={styles.otherBox}>
+            <Checkbox
+              status={value ? 'checked' : 'unchecked'}
+              onPress={() => onChange(!value)}
+              color={theme.colors.primary}
+              uncheckedColor={theme.colors.muted}
+            />
+            <Text
+              style={[
+                appStyles.textInput,
+                styles.otherLabel,
+              ]}
+            >
+              Other
+            </Text>
+          </View>
+        )}
+      />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  wrapper: { marginTop: 16 },
-  label: { fontWeight: '600', marginBottom: 6, color: '#334155' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  input: {
-    height: 52,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    backgroundColor: '#fff',
-  },
-  otherBox: { flexDirection: 'row', alignItems: 'center' },
-  errorBorder: { borderColor: 'red' },
-});
+/* ---------------- STYLES ---------------- */
+
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    otherBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    dropdown: {
+      height: 42,
+      width: '100%',
+      paddingHorizontal: 15,
+    },
+    dropdownList: {
+      backgroundColor: theme.colors.cardBg,
+      marginTop: 4,
+      elevation: 6,
+    },
+    itemText: {
+      fontWeight: '500',
+      color: theme.colors.text,
+    },
+    otherInput: {
+      paddingHorizontal: 15,
+      height: 42,
+    },
+    otherLabel: {
+      paddingHorizontal: 6,
+      fontWeight: '500',
+    },
+  });

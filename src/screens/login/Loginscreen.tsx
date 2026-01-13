@@ -7,7 +7,6 @@ import {
   Image,
   Dimensions,
   ActivityIndicator,
-
   KeyboardAvoidingView,
   Platform,
   ScrollView
@@ -19,39 +18,62 @@ import Button from '../../components/Button';
 
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../context/AuthContext';
-
-
-const { width } = Dimensions.get('window');
+import { useTheme } from '../../theme/ThemeContext';
+import { AppStyles } from '../../styles/AppStyles';
 
 const LoginScreen: React.FC = () => {
+  const theme = useTheme();
+  const appstyles = AppStyles(theme);
   const navigation = useNavigation();
-  const { login } = useContext(AuthContext);
+  const { login, } = useContext(AuthContext);
 
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState('+92-');
   const [phoneError, setPhoneError] = useState('');
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // ✅ LIVE AUTO FORMAT: +92-300-1234567
+  const formatPhoneInput = (text: string) => {
+    let digits = text.replace(/\D/g, '');
+
+    // Remove leading 92 if user pastes full number
+    if (digits.startsWith('92')) {
+      digits = digits.slice(2);
+    }
+
+    // Remove leading 0
+    if (digits.startsWith('0')) {
+      digits = digits.slice(1);
+    }
+
+    let formatted = '+92';
+
+    if (digits.length > 0) {
+      formatted += '-' + digits.substring(0, 3);
+    }
+    if (digits.length > 3) {
+      formatted += '-' + digits.substring(3, 10);
+    }
+
+    return formatted;
+  };
+
   const handleLogin = async () => {
     let isValid = true;
+    setPhoneError('');
+    setPasswordError('');
 
-    if (!phone.trim()) {
-      setPhoneError("Phone number is required");
+    // ✅ Validate formatted number
+    const regex = /^\+92-\d{3}-\d{7}$/;
+
+    if (!regex.test(phone)) {
+      setPhoneError('Enter valid phone number');
       isValid = false;
-    } else {
-      const regex = /^[0-9]{10,13}$/;
-      if (!regex.test(phone.trim())) {
-        setPhoneError("Enter valid Phone Number");
-        isValid = false;
-      }
     }
 
     if (!password.trim()) {
-      setPasswordError("Password is required");
-      isValid = false;
-    } else if (password.length < 6) {
-      setPasswordError("Password must be at least 6 characters");
+      setPasswordError('Password is required');
       isValid = false;
     }
 
@@ -59,210 +81,142 @@ const LoginScreen: React.FC = () => {
 
     try {
       setLoading(true);
+
       const response = await login(phone, password);
 
-      if (!response.success) {
-        setPasswordError(response.message || "Login failed");
-        return;
-      }
+       if (!response || !response.data) {
+      setPasswordError(response?.message || 'Login failed');
+      return;
+    }
 
-      if (response.code === "OTP_REQUIRED") {
-        navigation.navigate("Otp", { phone });
-        return;
-      }
-
+       if (response.data.trusted === false) {
+      navigation.navigate('Otp', { phone });
+      return;
+    }
     } catch (error) {
-      setPasswordError("Something went wrong, try again.");
+      setPasswordError('Something went wrong, try again.');
     } finally {
       setLoading(false);
     }
   };
 
- return (
-  <KeyboardAvoidingView
-    style={{ flex: 1, backgroundColor: "white", justifyContent: "center" }}
-    behavior={Platform.OS === "ios" ? "padding" : "height"}
-  >
-    <ScrollView
-      contentContainerStyle={styles.scroll}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <ScrollView
+        contentContainerStyle={[
+          appstyles.scrollContent,
+          { padding: 20, justifyContent: 'center' }
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* LOGO */}
+        <View style={styles.topContainer}>
+          <Image
+            source={require('../../Asesst/mgacs-logo.png')}
+            style={styles.topImage}
+            resizeMode="contain"
+          />
+        </View>
 
-      {/* LOGO */}
-      <View style={styles.topContainer}>
-        <Image
-          source={require('../../Asesst/mgacs-logo.png')}
-          style={styles.topImage}
-          resizeMode="contain"
-        />
-      </View>
+        {/* FORM */}
+        <View style={styles.card}>
+          <Text style={appstyles.screenTitle}>LOG IN</Text>
 
-      {/* FORM */}
-      <View style={styles.card}>
-        <Text style={styles.loginTitle}>LOG IN</Text>
+          <InputEmail
+            placeholder="+92-300-1234567"
+            keyboardType="numeric"
+            value={phone}
+            onchangeText={(text) => {
+              setPhone(formatPhoneInput(text));
+              setPhoneError('');
+            }}
+          />
+          {phoneError ? (
+            <Text style={appstyles.errorText}>{phoneError}</Text>
+          ) : null}
 
-        <InputEmail
-          placeholder="Phone Number"
-          keyboardType="phone-pad"
-          onchangeText={(text) => {
-            setPhone(text);
-            setPhoneError('');
-          }}
-          value={phone}
-        />
-        {phoneError ? <Text style={styles.errorText}>{phoneError}</Text> : null}
+          <Password
+            placeholder="Password"
+            value={password}
+            onchangeText={(text) => {
+              setPassword(text);
+              setPasswordError('');
+            }}
+          />
+          {passwordError ? (
+            <Text style={appstyles.errorText}>{passwordError}</Text>
+          ) : null}
 
-        <Password
-          placeholder="Password"
-          onchangeText={(text) => {
-            setPassword(text);
-            setPasswordError('');
-          }}
-          value={password}
-        />
-        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
-
-
-        <View style={styles.rowBetween}>
-          <TouchableOpacity>
-            <Text style={styles.forgetText}>Forgot password?</Text>
+          <TouchableOpacity style={{ alignSelf: 'flex-end', marginBottom: 20 }}>
+            <Text style={appstyles.mutedText}>Forgot password?</Text>
           </TouchableOpacity>
+
+          <Button title="Login" onPress={handleLogin} />
+        
+             <View style={styles.separatorContainer}>
+            <View style={styles.separator} />
+            <Text style={styles.orText}>OR</Text>
+            <View style={styles.separator} />
+          </View>
+             <Button
+            title="Create New Account"
+            onPress={() => navigation.navigate('Signin')}
+          />
         </View>
+      </ScrollView>
 
-        <Button title="Login" onPress={handleLogin} />
-
-        <View style={styles.separatorContainer}>
-          <View style={styles.separator} />
-          <Text style={styles.orText}>OR</Text>
-          <View style={styles.separator} />
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="white" />
+          <Text style={{ color: 'white', marginTop: 10 }}>
+            Logging in...
+          </Text>
         </View>
-
-        <TouchableOpacity
-          style={styles.createBtn}
-          onPress={() => navigation.navigate('Signin')}
-        >
-          <Text style={styles.createBtnText}>Create a new account</Text>
-        </TouchableOpacity>
-      </View>
-
-    </ScrollView>
-
-    {/* LOADING OVERLAY */}
-    {loading && (
-      <View style={styles.loadingOverlay}>
-        <ActivityIndicator size="large" color="white" />
-        <Text style={{ color: "white", marginTop: 10 }}>Logging in...</Text>
-      </View>
-    )}
-  </KeyboardAvoidingView>
-);
-
+      )}
+    </KeyboardAvoidingView>
+  );
 };
 
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    flexGrow: 1,
-    backgroundColor: "white",
-  
-    
-     
-  },
-scroll: {
-  padding: 20,
-  paddingBottom: 30,
-  flexGrow: 1,
-  justifyContent: "center",
-   // small natural spacing ONLY
-},
-
-  innerContainer: {
-    padding: 20,
-    backgroundColor: "white",
-  },
-
   topContainer: {
-    justifyContent: "center",
-    alignItems: "center",
+    alignItems: 'center',
     marginBottom: 20,
   },
-
   topImage: {
-    width: "40%",
+    width: '40%',
     height: 120,
   },
-
   card: {
-    width: "100%",
+    width: '100%',
   },
-
-  loginTitle: {
-    color: "#2B68F6",
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 20,
-  },
-
-  errorText: {
-    color: "red",
-    fontSize: 12,
-    marginBottom: 8,
-  },
-
-  rowBetween: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginVertical: 15,
-  },
-
-  forgetText: {
-    color: "#777",
-    fontSize: 13,
-  },
-
-  separatorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: 25,
-  },
-
-  separator: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#ddd",
-  },
-
-  orText: {
-    marginHorizontal: 10,
-    color: "#888",
-    fontSize: 13,
-  },
-
-  createBtn: {
-    backgroundColor: "#739CFF",
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 30,
-  },
-
-  createBtnText: {
-    color: "white",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-
   loadingOverlay: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "rgba(0,0,0,0.8)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 999,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+   separatorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 25,
+  },
+  separator: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#ddd',
+  },
+  orText: {
+    marginHorizontal: 10,
+    color: '#888',
+    fontSize: 13,
   },
 });

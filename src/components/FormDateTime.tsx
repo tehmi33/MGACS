@@ -1,86 +1,117 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useTheme } from '../theme/ThemeContext';
+import { AppStyles } from '../styles/AppStyles';
+import { Theme } from '../theme/themes';
 
 interface Props {
-  value: Date | undefined;
-  onChange: (date: Date) => void;
+  value?: Date;                     // LOCAL Date
+  onChange: (date: Date) => void;   // return LOCAL Date
   error?: string;
+  label?: string;
+  placeholder?: string;
 }
 
-export const FormDateTime = ({ value, onChange, error }: Props) => {
+export const FormDateTime = ({
+  value,
+  onChange,
+  error,
+  placeholder = 'Tap to select date & time',
+}: Props) => {
+  const theme = useTheme();
+  const appStyles = AppStyles(theme);
+  const styles = createStyles(theme);
+
   const [showPicker, setShowPicker] = useState(false);
-  const [mode, setMode] = useState<"date" | "time">("date");
+  const [mode, setMode] = useState<'date' | 'time'>('date');
 
-  const currentValue = value || new Date();
+  // Always use LOCAL date
+  const currentValue = value ?? new Date();
 
-  const handleChange = (event: any, selectedValue?: Date) => {
-    if (event.type === "dismissed") {
+  const handleChange = (_: any, selected?: Date) => {
+    // Cancel pressed
+    if (!selected) {
       setShowPicker(false);
+      setMode('date');
       return;
     }
 
-    if (!selectedValue) return;
-
-    // STEP 1: If selecting date → update date and open time picker
-    if (mode === "date") {
+    if (mode === 'date') {
       const updated = new Date(currentValue);
       updated.setFullYear(
-        selectedValue.getFullYear(),
-        selectedValue.getMonth(),
-        selectedValue.getDate()
+        selected.getFullYear(),
+        selected.getMonth(),
+        selected.getDate()
       );
 
-      // Open TIME picker after selecting date
-      setMode("time");
+      setMode('time');
       setShowPicker(true);
-
       onChange(updated);
       return;
     }
 
-    // STEP 2: If selecting time → update time and close picker
-    if (mode === "time") {
+    if (mode === 'time') {
       const updated = new Date(currentValue);
       updated.setHours(
-        selectedValue.getHours(),
-        selectedValue.getMinutes(),
+        selected.getHours(),
+        selected.getMinutes(),
         0,
         0
       );
 
       setShowPicker(false);
-      setMode("date"); // reset for next time
-
+      setMode('date');
       onChange(updated);
-      return;
     }
   };
 
-  const openPicker = () => {
-    setMode("date");
-    setShowPicker(true);
-  };
-
   return (
-    <View style={{ marginBottom: 20 }}>
-      <Text style={styles.label}>Select Date & Time</Text>
-
-      <TouchableOpacity style={styles.selector} onPress={openPicker}>
-        <Text style={styles.selectorText}>
+    <View>
+      <TouchableOpacity
+        style={[
+          appStyles.inputContainer,
+          styles.touchable,
+          error && appStyles.errorBorder,
+        ]}
+        onPress={() => {
+          setMode('date');
+          setShowPicker(true);
+        }}
+        activeOpacity={0.7}
+      >
+        <Text
+          style={[
+            appStyles.textInput,
+            !value && styles.placeholderText,
+          ]}
+        >
           {value
-            ? value.toLocaleString() // Date + Time combined
-            : "Tap to select date & time"}
+            ? value.toLocaleString('en-PK', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+              })
+            : placeholder}
         </Text>
       </TouchableOpacity>
 
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && <Text style={appStyles.errorText}>{error}</Text>}
 
       {showPicker && (
         <DateTimePicker
           value={currentValue}
           mode={mode}
-          display="default"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          minuteInterval={5}
           onChange={handleChange}
         />
       )}
@@ -88,24 +119,16 @@ export const FormDateTime = ({ value, onChange, error }: Props) => {
   );
 };
 
-const styles = StyleSheet.create({
-  label: {
-    marginBottom: 6,
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
-  },
-  selector: {
-    padding: 14,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  selectorText: {
-    color: "#333",
-  },
-  error: {
-    color: "red",
-    marginTop: 4,
-  },
-});
+/* ---------------- STYLES ---------------- */
+
+const createStyles = (theme: Theme) =>
+  StyleSheet.create({
+    touchable: {
+      paddingVertical: 15,
+      justifyContent: 'center',
+      marginVertical: 15,
+    },
+    placeholderText: {
+      color: theme.colors.placeholder,
+    },
+  });

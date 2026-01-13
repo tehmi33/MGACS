@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, View, TouchableOpacity, Image } from 'react-native';
+import { TextInput, View, TouchableOpacity, Image } from 'react-native';
+import { useTheme } from '../theme/ThemeContext';
+import { AppStyles } from '../styles/AppStyles';
 
 interface PasswordProps {
   placeholder: string;
@@ -8,27 +10,42 @@ interface PasswordProps {
 }
 
 const Password: React.FC<PasswordProps> = ({ placeholder, onchangeText, value }) => {
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+   const theme = useTheme();
+    const appstyles = AppStyles(theme);
+  const [visible, setVisible] = useState(false);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.passwordBox}>
+    <View style={appstyles.inputContainer}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          
+        }}
+      >
         <TextInput
           placeholder={placeholder}
-          secureTextEntry={!isPasswordVisible}
-          style={styles.input}
-          placeholderTextColor="#9E9E9E"
+          secureTextEntry={!visible}
+          style={[appstyles.textInput, { flex: 1, paddingHorizontal: 0 }]}
+          placeholderTextColor={theme.colors.placeholder}
           onChangeText={onchangeText}
           value={value}
         />
-        <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
+
+        <TouchableOpacity onPress={() => setVisible(!visible)}>
           <Image
             source={
-              isPasswordVisible
-                ? require('../Asesst/Variant2.png')
-                : require('../Asesst/eye.png')
+              visible
+                ? require('../Asesst/Variant2.png') // open eye
+                : require('../Asesst/eye.png')      // closed eye
             }
-            style={styles.icon}
+            style={
+              visible
+                ? { width: 15, height: 15 } // OPEN eye size
+                : { width: 20, height: 7 } // CLOSED eye size
+            }
+            resizeMode="contain"
           />
         </TouchableOpacity>
       </View>
@@ -37,37 +54,3 @@ const Password: React.FC<PasswordProps> = ({ placeholder, onchangeText, value })
 };
 
 export default Password;
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    borderColor:'#E0E0E0',
-    borderWidth:1,
-    borderRadius:10,
-    marginVertical: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 1,
-  },
-  passwordBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    height: 50,
-    paddingHorizontal: 15,
-  },
-  input: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '400',
-    color: 'black',
-    fontFamily: 'Roboto',
-  },
-  icon: {
-    width: 15,
-    height: 15,
-    resizeMode: 'contain',
-  },
-});
