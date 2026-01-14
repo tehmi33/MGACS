@@ -282,7 +282,7 @@ const createStyles = (theme: Theme) =>
       backgroundColor: 'rgba(0,0,0,0.45)',
       // justifyContent: 'flex-end',
       zIndex: 1000,
-      marginBottom: 80
+      marginBottom: 80 
     },
     scrollContainer: {
       flexGrow: 1,

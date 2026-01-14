@@ -60,15 +60,15 @@ export default CustomTabBar;
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute",
-    bottom: 10,
-    left: 20,
-    right: 20,
+    // position: "absolute",
+    // bottom: 10,
+    // left: 20,
+    // right: 20,
   },
   tabBar: {
     height: 65,
     backgroundColor: "#FFFFFF",
-    borderRadius: 30,
+    // borderRadius: 30,
     flexDirection: "row",
     elevation: 10,
   },

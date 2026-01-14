@@ -1,99 +1,60 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-import Animated, { withSpring, useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
-import { AppStyles } from '../../styles/AppStyles';
-import { Theme } from '../../theme/themes';
-import ChallanCard from '../../components/ChallanCard';
-
+import ChallanRow from '../../components/ChallanCard';
+import { Form } from 'react-hook-form';
+import FormCard from '../../components/FormCard';
 
 const MyChallansScreen = () => {
   const theme = useTheme();
-  const app = AppStyles(theme);
   const styles = createStyles(theme);
-
-  const y = useSharedValue(60);
-
-  React.useEffect(() => {
-    y.value = withSpring(0, { damping: 30 });
-  }, []);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: y.value }],
-  }));
 
   const challans = [
     {
-      id: 1,
-      violation: 'Speeding Violation',
+      id: '1',
+      title: 'Speeding Violation',
       vehicle: 'KA-01-MJ-2045',
-      location: 'Outer Ring Road',
-      datetime: '12 Jan 2024, 10:45 AM',
       amount: 1500,
-      status: 'UNPAID',
+      type: 'car',
     },
     {
-      id: 2,
-      violation: 'No Helmet',
+      id: '2',
+      title: 'No Helmet',
       vehicle: 'KA-03-HL-9921',
-      location: 'Whitefield',
-      datetime: '08 Jan 2024, 6:30 PM',
       amount: 500,
-      status: 'PAID',
+      type: 'bike',
     },
   ];
 
   return (
-    <View style={[app.container,{padding:0}]}>
-      {/* HEADER */}
-      <LinearGradient colors={theme.gradients.primary} style={styles.header}>
-        <Text style={styles.title}>My Challans</Text>
-        <Text style={styles.subtitle}>
-          Total Due: ₹8,500 • Paid: ₹5,500
-        </Text>
-      </LinearGradient>
+    <View style={styles.container}>
+      <FormCard title="My Challans" subtitle="Your Challans"
+        children={<></>}
+       />
 
-      {/* CARD */}
-      <Animated.View style={[styles.card, animStyle]}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {challans.map(c => (
-            <ChallanCard key={c.id} challan={c} />
-          ))}
-        </ScrollView>
-      </Animated.View>
+      <FlatList
+        data={challans}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => <ChallanRow challan={item} />}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      />
     </View>
   );
 };
 
 const createStyles = (theme: any) =>
   StyleSheet.create({
-    header: {
-      paddingTop: 60,
-      paddingBottom: 110,
-      paddingHorizontal: 20,
-      borderBottomLeftRadius: 30,
-      borderBottomRightRadius: 30,
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.infoLight, // EXACT light purple
+      paddingHorizontal: 16,
+      paddingTop: 20,
     },
-    title: {
+    header: {
       fontSize: 18,
       fontWeight: '700',
-      color: theme.colors.white,
-    },
-    subtitle: {
-      marginTop: 4,
-      fontSize: 12,
-      color: theme.colors.white,
-      opacity: 0.9,
-    },
-    card: {
-      marginHorizontal: 14,
-      marginTop: -90,
-      backgroundColor: theme.colors.cardBg,
-      borderRadius: 24,
-      padding: 14,
-      elevation: 8,
-      flex: 1,
+      color: theme.colors.primary,
+      marginBottom: 16,
     },
   });
 

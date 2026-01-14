@@ -1,126 +1,113 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
-import { AppStyles } from '../styles/AppStyles';
 
-const ChallanCard = ({ challan }: any) => {
+const ChallanRow = ({ challan }: any) => {
   const theme = useTheme();
-  const app = AppStyles(theme);
   const styles = createStyles(theme);
 
-  const unpaid = challan.status === 'UNPAID';
-
-  // choose image based on vehicle number (bike / car)
-  const vehicleImage =
-    challan.vehicle.includes('KA-03')
+  const image =
+    challan.type === 'bike'
       ? require('../Asesst/bike.png')
       : require('../Asesst/car.png');
 
   return (
-    <LinearGradient
-      colors={theme.gradients.primary}
-      style={styles.card}
-    >
-      {/* LEFT CONTENT */}
-      <View style={styles.left}>
-        <Text style={styles.offerLabel}>
-          {unpaid ? 'Payment Due' : 'Paid'}
-        </Text>
+    <View style={styles.container}>
+      <View style={styles.row}>
+        {/* IMAGE */}
+        <Image source={image} style={styles.image} />
 
-        <Text style={styles.title}>{challan.violation}</Text>
+        {/* INFO */}
+        <View style={styles.info}>
+          <Text style={styles.title}>{challan.title}</Text>
+          <Text style={styles.sub}>{challan.vehicle}</Text>
 
-        <Text style={styles.sub}>
-          {challan.vehicle} • ₹{challan.amount}
-        </Text>
+          <View style={styles.bottom}>
+            <View style={styles.circle}>
+              <Text style={styles.circleText}>01</Text>
+            </View>
 
-        {unpaid && (
-          <TouchableOpacity style={styles.btn}>
-            <Text style={styles.btnText}>Pay Now</Text>
-          </TouchableOpacity>
-        )}
+            <Text style={styles.price}>₹{challan.amount}</Text>
+          </View>
+        </View>
       </View>
 
-      {/* RIGHT IMAGE */}
-      <View style={styles.imageWrap}>
-        <Image
-          source={vehicleImage}
-          style={styles.image}
-          resizeMode="contain"
-        />
-      </View>
-    </LinearGradient>
+      {/* SEPARATOR */}
+      <View style={styles.separator} />
+    </View>
   );
 };
 
 const createStyles = (theme: any) =>
   StyleSheet.create({
-    card: {
-      height: 130,
-      borderRadius: 20,
-      marginBottom: 14,
-      paddingLeft: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      overflow: 'hidden',
+    container: {
+      backgroundColor: theme.colors.infoLight,
     },
 
-    /* LEFT */
-    left: {
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+    },
+
+    image: {
+      width: 48,
+      height: 48,
+      resizeMode: 'contain',
+      marginRight: 12,
+    },
+
+    info: {
       flex: 1,
-      gap: 6,
     },
-    offerLabel: {
-      fontSize: 11,
-      color: theme.colors.white,
-      opacity: 0.8,
-      fontWeight: '600',
-    },
+
     title: {
-      fontSize: 15,
-      fontWeight: '700',
-      color: theme.colors.white,
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#000',
     },
+
     sub: {
-      fontSize: 12,
-      color: theme.colors.white,
-      opacity: 0.9,
+      fontSize: 11,
+      color: '#666',
+      marginTop: 2,
     },
-    btn: {
-      marginTop: 6,
-      backgroundColor: theme.colors.white,
-      paddingVertical: 6,
-      paddingHorizontal: 14,
-      borderRadius: 20,
-      alignSelf: 'flex-start',
+
+    bottom: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 8,
     },
-    btnText: {
-      fontSize: 12,
+
+    circle: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+
+    circleText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: theme.colors.primary,
+    },
+
+    price: {
+      fontSize: 14,
       fontWeight: '700',
       color: theme.colors.primary,
     },
 
-    /* RIGHT IMAGE */
-    imageWrap: {
-      width: 120,
-      height: 120,
-      borderRadius: 60,
-      backgroundColor: 'rgba(255,255,255,0.25)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: -30,
-    },
-    image: {
-      width: 90,
-      height: 90,
+    separator: {
+      height: 1,
+      backgroundColor: theme.colors.primary, // dark line between rows
+      marginLeft: 76, // aligns after image
     },
   });
 
-export default ChallanCard;
+export default ChallanRow;
