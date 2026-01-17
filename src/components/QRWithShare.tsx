@@ -74,7 +74,7 @@ export default function TinyQRCodeCard({ value, size = 38 }: Props) {
         </View>
       </ViewShot>
 
-      <Text style={[appstyles.mutedText,styles.code]}>{value}</Text>
+      {/* <Text style={[appstyles.mutedText,styles.code]}>{value}</Text> */}
     </View>
   );
 }

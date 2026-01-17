@@ -1,34 +1,53 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { ScrollView, View , StatusBar, Dimensions, Platform} from 'react-native';
 import VisitorEntryCard from '../../components/VisitorEntryCard';
 import FormCard from '../../components/FormCard';
 
 import { useTheme } from '../../theme/ThemeContext';
 import { AppStyles } from '../../styles/AppStyles';
 import api from '../../api/client';
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AppStackParamList } from "../../navigation/AppStack";
+const STATUS_BAR_HEIGHT =
+  Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0;
 
-export default function VisitorInformation({ navigation }: any) {
+type AppNavProp = NativeStackNavigationProp<AppStackParamList>;
+
+export default function VisitorInformation() {
+  const navigation = useNavigation<AppNavProp>();
+
   const theme = useTheme();
   const appstyles = AppStyles(theme);
 
   const [visits, setVisits] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchVisits();
-  }, []);
+/* ---------------- FETCH VISITS ---------------- */
 
-  const fetchVisits = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get('/visit?record=5');
-      setVisits(res.data?.visits?.data ?? []);
-    } catch (error) {
-      console.error('Failed to fetch visits:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchVisits = useCallback(async () => {
+  try {
+    setLoading(true);
+
+    console.log('Fetching visits...');
+    const res = await api.get('/visit?record=5');
+
+    console.log('Visits response:', res?.data);
+    setVisits(res?.data?.visits?.data ?? []);
+  } catch (error) {
+    console.error('Failed to fetch visits:', error);
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
+/* ---------------- FOCUS EFFECT ---------------- */
+
+useFocusEffect(
+  useCallback(() => {
+    fetchVisits();
+  }, [fetchVisits])
+);
 
   const getPrimaryVisitorName = (visit: any): string => {
     const primary = visit.visit_visitors?.find(
@@ -38,16 +57,18 @@ export default function VisitorInformation({ navigation }: any) {
   };
 
   return (
-    <ScrollView
-      style={appstyles.container}
-      contentContainerStyle={appstyles.scrollContent}
+    <View
+      style={appstyles.container} 
     >
+      {/* <StatusBar barStyle="dark-content" translucent backgroundColor={theme.colors.white}/> */}
       <FormCard
         title="Visitor Request"
         subtitle="Review visitor information"
         children={null}
+       
       />
-
+      <View></View>
+<ScrollView contentContainerStyle={appstyles.scrollContent}>
       {visits.map((visit) => (
         <VisitorEntryCard
           key={visit.id}
@@ -59,13 +80,15 @@ export default function VisitorInformation({ navigation }: any) {
           statusName={visit.model_status?.name}
           stautsColor={visit.model_status?.color}
           QRcode={visit.visit_code}
-          onPress={() =>
-            navigation.navigate('VisitorPassScreen', {
+         onPress={() =>
+            navigation.navigate("VisitorPass", {
               visitId: visit.id,
             })
           }
         />
       ))}
-    </ScrollView>
+      </ScrollView>
+      </View>
+    
   );
 }

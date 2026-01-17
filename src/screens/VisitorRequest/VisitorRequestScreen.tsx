@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Animated,
   ScrollView,
+  ToastAndroid, Platform
 } from 'react-native';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -23,6 +24,8 @@ import { AppStyles } from '../../styles/AppStyles';
 import api from "../../api/client";
 import { mapVisitToFormData } from "../../api/visit.mapper";
 import { useVisitCreate } from "../../hooks/useVisitCreate";
+import { useNavigation } from '@react-navigation/native';
+
 
 
 import {
@@ -65,6 +68,7 @@ const VEHICLE_TYPE_MAP: Record<"car" | "bike", VehicleType> = {
 /* ---------------- SCREEN ---------------- */
 
 export default function VisitorRequestScreen() {
+  const navigation = useNavigation<any>();
   const {
   loading,
   residentOptions,
@@ -84,12 +88,14 @@ export default function VisitorRequestScreen() {
     control,
     handleSubmit,
     watch,
+    setError,
+    reset,
     formState: { errors, isValid },
   } = useForm<VisitorRequest>({
     mode: 'onChange',
     defaultValues: {
       residentType: undefined,
-      visitDateTime: '',
+      visitDateTime: undefined,
       entryGate: undefined,
       visitPurpose: '',
       destination: '',
@@ -177,6 +183,15 @@ const [vehicleTypeForSubmit, setVehicleTypeForSubmit] =
   const isEmptyVisitor = (v: Visitor) =>
     !v.name || v.name.trim() === "";
 
+
+
+  const hasVisitorError = (index: number) => {
+  return Boolean(errors?.visitors && errors.visitors[index]);
+};
+
+const hasVehicleError = (index: number) => {
+  return Boolean(errors?.vehicles && errors.vehicles[index]);
+};
 
    /* ---------------- HANDLERS ---------------- */
 
@@ -291,7 +306,32 @@ const handleSubmitVehicle = (data: VehicleFormValues) => {
 
  
 
+const reqSubmit = (data: VisitorRequest) => {
+  const loc = undefined; // or get from state / GPS
+  RequestSubmit(data, loc);
+};
 
+const mapApiErrorPathToFormPath = (path: string): string => {
+  // visitor_mobile_no.0 → visitors.0.phone
+  if (path.startsWith('visitor_mobile_no')) {
+    const index = path.split('.')[1];
+    return `visitors.${index}.phone`;
+  }
+
+  // visitor_cnic.0 → visitors.0.cnic
+  if (path.startsWith('visitor_cnic')) {
+    const index = path.split('.')[1];
+    return `visitors.${index}.cnic`;
+  }
+
+  // vehicle_plate_no.0 → vehicles.0.plateNo
+  if (path.startsWith('vehicle_plate_no')) {
+    const index = path.split('.')[1];
+    return `vehicles.${index}.plateNo`;
+  }
+
+  return path; // fallback
+};
 
 
   const RequestSubmit = async (data: VisitorRequest, loc?: {
@@ -311,16 +351,68 @@ const handleSubmitVehicle = (data: VehicleFormValues) => {
       formData.append("accuracy", (loc.accuracy));
     }
 
-    await api.post("/visit", formData, {
+    const res = await api.post("/visit", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
+    // ✅ Extract visitId safely
+const visitId = res.data?.data?.visit?.id;
 
+console.log('visit id:' , visitId)
+if (!visitId) {
+  throw new Error('Visit ID not returned from API');
+}
+reset({
+  residentType: undefined,
+  visitDateTime: undefined,
+  entryGate: undefined,
+  visitPurpose: '',
+  destination: '',
+  visitors: [
+    {
+      id: uuid.v4() as string,
+      type: 'primary',
+      name: '',
+      cnic: '',
+      phone: '',
+    },
+  ],
+  vehicles: [],
+});
+
+// ✅ CLOSE MODALS
+setFormVisible(false);
+setVehicleFormVisible(false);
+setEditingVisitorId(null);
+setEditingVehicleId(null);
     console.log("✅ VISIT REQUEST SUCCESS:", data);
-  } catch (error) {
-    console.log("❌ VISIT REQUEST ERROR:", error);
+      navigation.navigate('VisitorPass', { visitId });
+  } 
+    catch (error: any) {
+  const apiErrors = error?.response?.data?.errors;
+  const message =
+    error?.response?.data?.message ||
+    'Something went wrong. Please check your input.';
+
+  // 🔴 ANDROID ONLY TOAST
+  if (Platform.OS === 'android') {
+    ToastAndroid.show(message, ToastAndroid.LONG);
   }
+
+  // Still map errors to form (for red rows & inputs)
+  if (apiErrors && typeof apiErrors === 'object') {
+    Object.entries(apiErrors).forEach(([path, messages]) => {
+      const formPath = mapApiErrorPathToFormPath(path);
+
+      setError(formPath as any, {
+        type: 'server',
+        message: Array.isArray(messages) ? messages[0] : String(messages),
+      });
+    });
+  }
+}
+
 };
 
 
@@ -331,9 +423,12 @@ const handleSubmitVehicle = (data: VehicleFormValues) => {
 
   return (
    <View style={appstyles.container}>
-      {/* FIXED FORM */}
+      {/* FIXED FORM */}  
    <View style={{backgroundColor:'transparent'}}>
         <FormCard title="Visitor Request" subtitle="Add visit information">
+     
+          
+        
           <ResidentTypeSelector
   control={control}
   name="residentType"
@@ -417,6 +512,7 @@ const handleSubmitVehicle = (data: VehicleFormValues) => {
   {visitorFields.map((v, index) => {
     const isPrimary = v.type === 'primary';
     const isEmpty = !v.name?.trim();
+    const isError = hasVisitorError(index);
 
     if (isPrimary && isEmpty) {
       return (
@@ -433,13 +529,13 @@ const handleSubmitVehicle = (data: VehicleFormValues) => {
           theme={theme}
         />
       );
-    }
-
-    return (
+    }   return (
+     
       <VisitorRow
         key={v.id}
         icon={v.type === 'under18' ? 'account-child' : 'account'}
         title={v.name}
+         hasError={isError}
         styles={styles}
         appstyles={appstyles}
         theme={theme}
@@ -524,37 +620,50 @@ const handleSubmitVehicle = (data: VehicleFormValues) => {
       theme={theme}
     />
   ) : (
-    vehicleFields.map((v, index) => (
-      <VisitorRow
-        key={v.id}
-        icon="car"
-        iconType="fontawesome"
-        title={v.plateNo || '(No plate number)'}
-        styles={styles}
-        appstyles={appstyles}
-        theme={theme}
-        meta={compact<MetaItem>([
-          v.make && {
-            icon: 'info',
-            value: v.make,
-            color: theme.colors.info,
-          },
-          v.model && {
-            icon: 'calendar',
-            value: v.model,
-            color: theme.colors.warning,
-          },
-        ])}
-        isLast={index === vehicleFields.length - 1}
-        onEdit={() => {
-          setEditingVehicleId(v.id);
-          setVehicleFormVisible(true);
-        }}
-        onDelete={() => removeVehicle(index)}
-      />
-    ))
+    vehicleFields.map((v, index) => {
+      const isError = hasVehicleError(index);
+
+      return (
+        <VisitorRow
+          key={v.id}
+          icon="car"
+          iconType="fontawesome"
+          title={v.plateNo || '(No plate number)'}
+          hasError={isError}
+          styles={styles}
+          appstyles={appstyles}
+          theme={theme}
+          // badges={compact<Badge>([
+          //   isError && {
+          //     label: 'Error',
+          //     color: theme.colors.danger,
+          //     backgroundColor: theme.colors.danger,
+          //   },
+          // ])}
+          meta={compact<MetaItem>([
+            v.make && {
+              icon: 'info',
+              value: v.make,
+              color: theme.colors.info,
+            },
+            v.model && {
+              icon: 'calendar',
+              value: v.model,
+              color: theme.colors.warning,
+            },
+          ])}
+          isLast={index === vehicleFields.length - 1}
+          onEdit={() => {
+            setEditingVehicleId(v.id);
+            setVehicleFormVisible(true);
+          }}
+          onDelete={() => removeVehicle(index)}
+        />
+      );
+    })
   )}
 </Section>
+
 
    <TouchableOpacity
         style={[
@@ -562,7 +671,7 @@ const handleSubmitVehicle = (data: VehicleFormValues) => {
           !canSubmit && { backgroundColor: theme.colors.muted  },
         ]}
         disabled={!canSubmit}
-        onPress={handleSubmit(RequestSubmit)}
+        onPress={handleSubmit(reqSubmit)}
       >
         <Text style={appstyles.buttonText}>Save Visitor Request</Text>
       </TouchableOpacity>
@@ -789,6 +898,7 @@ interface VisitorRowProps {
   iconType?: 'material' | 'fontawesome'; 
  iconSize?: number; 
   title: string;
+  hasError?: boolean;
   badges?: Badge[];
   meta?: MetaItem[];
   onEdit: () => void;
@@ -800,6 +910,7 @@ const VisitorRow = ({
   icon,
   iconType = 'material',
   title,
+  hasError = false, 
   badges = [],
   meta = [],
   onEdit,
@@ -817,10 +928,22 @@ const VisitorRow = ({
   const IconComponent =
     iconType === 'fontawesome' ? FontAwesome : MaterialCommunityIcons;
 
+
   const isVehicleIcon = icon === 'car' || icon === 'bus';
 
   return (
-    <View style={[styles.rowCompact, isLast && { borderBottomWidth: 0 }]}>
+   <View
+  style={[
+    styles.rowCompact,
+    isLast && { borderBottomWidth: 0 },
+    hasError && {
+      borderLeftWidth: 4,
+      borderLeftColor: theme.colors.danger,
+      backgroundColor: theme.colors.dangerLight,
+    },
+  ]}
+>
+
       {/* Icon */}
       <LinearGradient
         colors={theme.gradients.primary}
@@ -852,6 +975,7 @@ const VisitorRow = ({
                     theme.colors.primaryLight,
                 },
               ]}
+              
             >
               {b.icon && (
                 <IconComponent

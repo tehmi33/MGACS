@@ -27,7 +27,7 @@ const BottomTabs: React.FC = () => {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Visitors" component={VisitorRequestScreen} />
        <Tab.Screen name="VisitorInfo" component={VisitorInformation} />
-      <Tab.Screen name="Challans" component={ChallansScreen} />
+      {/* <Tab.Screen name="Challans" component={ChallansScreen} /> */}
     </Tab.Navigator>
   );
 };

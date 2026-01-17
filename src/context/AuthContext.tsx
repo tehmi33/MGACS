@@ -26,8 +26,11 @@ import { getCachedFcmToken } from "../utils/fcmToken";
 ------------------------------------------------------- */
 interface AuthContextProps {
   user: User | null;
+   firstName: string | null;
+  setFirstName: (name: string) => void;
   loading: boolean;
   login: (phone: string, password: string) => Promise<ApiResponse<LoginResponse | null>>;
+  register: (mobile_no: string, password: string, password_confirmation: string, name: string, cnic: string) => Promise<ApiResponse<LoginResponse | null>>;
   verifyOtp: (phone: string, otp: string) => Promise<ApiResponse<VerifyOtpResponse | null>>;
   logout: () => Promise<void>;
   enableBiometricLogin: () => Promise<boolean>;
@@ -38,8 +41,11 @@ interface AuthContextProps {
 
 export const AuthContext = createContext<AuthContextProps>({
   user: null,
+  firstName: null,
+  setFirstName: () => { },
   loading: false,
   login: async () => ({ success: false, code: "NOT_IMPLEMENTED", message: "", data: null }),
+  register: async () => ({ success: false, code: "NOT_IMPLEMENTED", message: "", data: null }),
   verifyOtp: async () => ({ success: false, code: "NOT_IMPLEMENTED", message: "", data: null }),
   logout: async () => { },
   enableBiometricLogin: async () => false,
@@ -66,7 +72,7 @@ export const getLocationForApi = async () => {
 ------------------------------------------------------- */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-
+const [firstName, setFirstName] = useState<string | null>(null);
   // VERY IMPORTANT: session token stays ONLY in memory.
   const [sessionToken, setSessionToken] = useState<string | null>(null);
 
@@ -292,6 +298,66 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 };
 
+const register = async (
+  mobile_no: string,
+  password: string,
+  password_confirmation: string,
+  name?: string,
+  cnic?: string
+) => {
+  try {
+
+     const payload: any = {
+      mobile_no,
+      password,
+      password_confirmation,
+    };
+
+    if (name) {
+      payload.name = name;
+    }
+
+    if (cnic) {
+      payload.cnic = cnic;
+    }
+   
+      // ...(loc && {
+      //   latitude: loc.latitude,
+      //   longitude: loc.longitude,
+      //   accuracy: loc.accuracy,
+      // }),
+    const res = await api.post("/auth/register", payload);
+  const apiUser = res.data.data.user;
+
+const firstName =
+  typeof apiUser?.name === "string" && apiUser.name.trim()
+    ? apiUser.name.trim().split(/\s+/)[0]
+    : "User";
+ // ✅ console it
+console.log("First name from register API:", firstName);
+
+// ✅ STORE ONLY FIRST NAME
+setFirstName(firstName);
+
+
+    if (res.data.data?.token) {
+      // Store token only in memory
+      setSessionToken(res.data.data.token);
+      setAxiosToken(res.data.data.token);
+      // setUser(res.data.data.user ?? null);
+
+      // updateFcmToken(res.data.data.token);
+      
+    }
+
+
+    return res.data;
+
+  } catch (err: any) {
+    return parseApiError(err);
+  }
+};
+
 
   /* -------------------------------------------------------
      VERIFY OTP
@@ -405,6 +471,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
+        firstName,
+        setFirstName,
         loading,
         login,
         verifyOtp,
@@ -412,7 +480,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         enableBiometricLogin,
         biometricEnabled,
         untrustAllDevices,
-        resendOtp
+        resendOtp,
+        register
       }}
     >
       {children}

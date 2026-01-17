@@ -43,6 +43,10 @@ const VisitorEntryCard = ({
   const styles = createStyles(theme);
 
   const normalizedStatus = statusName?.toLowerCase() as Status;
+  
+
+
+const isExpired = normalizedStatus === 'expired';
 
   const STATUS_CONFIG: Record<Status, any> = {
     pending: {
@@ -65,8 +69,6 @@ const VisitorEntryCard = ({
 
   const config =
     STATUS_CONFIG[normalizedStatus] ?? STATUS_CONFIG.pending;
-
-  const isExpired = new Date(endDateTime).getTime() < Date.now();
 
   return (
     <Pressable style={styles.wrapper} onPress={onPress}>
@@ -132,19 +134,18 @@ const VisitorEntryCard = ({
             <Icon
               name={isExpired ? 'clock-alert-outline' : 'timer-sand'}
               size={14}
-              color={config.iconColor}
+              color={'red'}
             />
             <Text
               style={[
                 appstyles.badgeText,
-                { color: config.iconColor },
+                { color: 'red' },
               ]}
             >
-              {isExpired
-                ? 'Expired'
-                : `Expires ${formatDate(endDateTime)} ${formatTime(
-                    endDateTime
-                  )}`}
+           {isExpired
+  ? 'Expired'
+  : `Expired at ${formatDate(endDateTime)} ${formatTime(endDateTime)}`}
+
             </Text>
           </View>
         </View>

@@ -27,9 +27,12 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import DrawerNavigator from "./DrawerNavigator";
+import VisitorPassScreen from "../screens/VisitorPassScreen/VisitorPassScreen";
+
 
 export type AppStackParamList = {
   Drawer: undefined;
+VisitorPass:undefined;
 };
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -39,6 +42,10 @@ const AppStack: React.FC = () => {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {/* Drawer is the MAIN ENTRY */}
       <Stack.Screen name="Drawer" component={DrawerNavigator} />
+      <Stack.Screen
+        name="VisitorPass" 
+        component={VisitorPassScreen}
+      />
     </Stack.Navigator>
   );
 };

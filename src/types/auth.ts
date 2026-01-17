@@ -1,6 +1,7 @@
 export interface User {
   id: number;
   mobile_no: string;
+  firstName?: string;
   name: string;
 }
 

@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Pressable
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Animated, {
@@ -23,7 +24,8 @@ import QRCode from 'react-native-qrcode-svg';
 import { useTheme } from '../../theme/ThemeContext';
 import { AppStyles } from '../../styles/AppStyles';
 import api from '../../api/client';
-
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 const { height } = Dimensions.get('window');
 
 /* ========================================================= */
@@ -31,8 +33,12 @@ const { height } = Dimensions.get('window');
 /* ========================================================= */
 
 const VisitorPassScreen: React.FC = ({ route }:any) => {
-const { visitId } = route.params;
-console.log ("visitId", visitId); 
+const visitId = route.params?.visitId || globalThis.visitId;
+// ❌ fails if visitId === '' or '0'
+
+console.log ("passvisitId", visitId); 
+  const navigation = useNavigation();
+
 
   const theme = useTheme();
   const app = AppStyles(theme);
@@ -224,6 +230,7 @@ const formatTime = (dateString?: string) => {
   return (
     <View style={[app.container, { padding: 0 }]}>
       <Header
+      navigation={navigation}
         statusName={visit.model_status?.name}
         statusColor={visit.model_status?.color}
         created_at={visit.created_at}
@@ -243,15 +250,15 @@ const formatTime = (dateString?: string) => {
                     color={theme.colors.title}
                     backgroundColor={theme.colors.white}
                   />
-                  <Text style={app.mutedText}>{visit.visit_code}</Text>
+                  {/* <Text style={app.mutedText}>{visit.visit_code}</Text> */}
                 </View>
               </ViewShot>
 
               <View style={styles.validBox}>
                 <View>
-                  <Text style={app.mutedText}>Valid Until</Text>
-                  <Text style={styles.validValue}>{formatDate(visit.to)}</Text>
-                  <Text style={app.mutedText}>{formatTime(visit.to)}</Text>
+                  <Text style={[app.mutedText, {fontSize: 10}]}>Valid Until</Text>
+                  <Text style={[app.heading, {fontSize: 13}]}>{formatDate(visit.to)}</Text>
+                  <Text style={[app.mutedText, {fontSize: 10}]}>{formatTime(visit.to)}</Text>
                 </View>
 
                 <TouchableOpacity onPress={onSharePass}>
@@ -354,23 +361,61 @@ const formatDateTime = (dateString?: string) => {
   return `${day} ${month}, ${displayHour}:${minutes} ${ampm}`;
 };
 
-const Header = ({ statusName, statusColor, created_at }: any) => {
+const Header = ({ statusName, statusColor, created_at, navigation }: any) => {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const app = AppStyles(theme);
 
   return (
     <LinearGradient colors={theme.gradients.primary} style={styles.header}>
-      <View style={styles.inline}>
-        <Text style={styles.house}>Visitor Pass</Text>
+
+      {/* TOP BAR */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginTop: -10, // lifts content without changing padding
+          zIndex: 10,
+        }}
+      >
+        <Pressable
+          onPress={() => navigation?.goBack?.()}
+          style={({ pressed }) => [
+            app.backButton,
+            pressed && { opacity: 0.7 },
+          ]}
+        >
+          <Icon name="chevron-left" size={22} color={theme.colors.white} />
+        </Pressable>
+
+        <Text
+          style={[
+            app.screenTitle,
+            { color: theme.colors.white, marginLeft: 8 },
+          ]}
+        >
+          Visitor Pass
+        </Text>
+      </View>
+
+      {/* SECOND ROW */}
+      <View style={[styles.inline, { marginTop: 10 }]}>
+        <Text style={styles.headerText}>
+          Created at: {formatDateTime(created_at)}
+        </Text>
+
         <View style={[styles.status, { backgroundColor: statusColor }]}>
           <Icon name="check-circle" size={14} color={theme.colors.white} />
           <Text style={styles.statusText}>{statusName}</Text>
         </View>
       </View>
-      <Text style={styles.headerText}>Created at: {formatDateTime(created_at)}</Text>
+
     </LinearGradient>
   );
 };
+
+
+
 /* ========================================================= */
 /* ===================== INFO CARD ========================== */
 /* ========================================================= */
@@ -378,12 +423,14 @@ const Header = ({ statusName, statusColor, created_at }: any) => {
 const InfoCard = ({ visit }: any) => {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const app = AppStyles(theme);
 
   return (
     <View style={styles.blueCard}>
       <LinearGradient colors={theme.gradients.primary} style={styles.blueHeader}>
         <Icon name="information-outline" size={16} color={theme.colors.header} />
-        <Text style={[styles.headerText, { color: theme.colors.header }]}>
+        <Text style={[app.heading, { color: theme.colors.header }]}>
+        
           Visit Information
         </Text>
       </LinearGradient>
@@ -560,7 +607,7 @@ const createStyles = (theme: any) =>
   StyleSheet.create({
     header: {
       paddingTop: 60,
-      paddingBottom: 110,
+      paddingBottom: 100,
       paddingHorizontal: 20,
       borderBottomLeftRadius: 30,
       borderBottomRightRadius: 30,
@@ -621,7 +668,7 @@ const createStyles = (theme: any) =>
   justifyContent: 'space-between',
 },
     validValue: {
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: '700',
       color: theme.colors.title,
     },
@@ -696,7 +743,7 @@ const createStyles = (theme: any) =>
 },
 
 infoGridItem: {
-  width: '48%',
+  // width: '60%',
   backgroundColor: theme.colors.infoLight,
   borderRadius: 10,
   padding: 4,

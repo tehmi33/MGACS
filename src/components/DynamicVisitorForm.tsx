@@ -7,6 +7,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   TextInput,
+  Modal,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { Visitor } from '../types/VisitorRequest';
@@ -45,60 +46,55 @@ export default function DynamicVisitorForm({
   const theme = useTheme();
   const appstyles = AppStyles(theme);
   const styles = createStyles(theme);
-const formatPhoneInput = (text: string) => {
-  let digits = text.replace(/\D/g, '');
+  const isEditing = Boolean(initialValues?.name);
 
-  // Remove leading 92 if pasted
-  if (digits.startsWith('92')) {
-    digits = digits.slice(2);
+  const formatPhoneInput = (value: string) => {
+  let digits = value.replace(/\D/g, '');
+
+  // Remove country code if user types it
+  if (digits.startsWith('92')) digits = digits.slice(2);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+
+  // Force first digit to be 3 ONLY ONCE
+  if (digits.length > 0 && digits[0] !== '3') {
+    digits = '3' + digits.slice(0, 9);
   }
 
-  // Remove leading 0
-  if (digits.startsWith('0')) {
-    digits = digits.slice(1);
-  }
-
-  // Must start with 3
-  if (!digits.startsWith('3')) {
-    digits = '3' + digits.replace(/^3+/, '');
-  }
-
-  digits = digits.slice(0, 10); // 3XX + 7 digits
+  // Limit to 10 digits
+  digits = digits.slice(0, 10);
 
   let formatted = '+92';
 
-  if (digits.length >= 3) {
-    formatted += `-${digits.slice(0, 3)}`;
+  if (digits.length > 0) {
+    formatted += '-' + digits.slice(0, 3);
   }
+
   if (digits.length > 3) {
-    formatted += `-${digits.slice(3)}`;
+    formatted += '-' + digits.slice(3);
   }
 
   return formatted;
 };
 
-const formatCnicInput = (text: string) => {
-  let value = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
-  // Limit to 13 total characters
-  value = value.slice(0, 13);
 
-  let formatted = value;
+  const formatCnicInput = (text: string) => {
+    let value = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    value = value.slice(0, 13);
 
-  if (value.length > 5) {
-    formatted = value.slice(0, 5) + '-' + value.slice(5);
-  }
-  if (value.length > 12) {
-    formatted =
-      value.slice(0, 5) +
-      '-' +
-      value.slice(5, 12) +
-      '-' +
-      value.slice(12);
-  }
+    let formatted = value;
+    if (value.length > 5)
+      formatted = value.slice(0, 5) + '-' + value.slice(5);
+    if (value.length > 12)
+      formatted =
+        value.slice(0, 5) +
+        '-' +
+        value.slice(5, 12) +
+        '-' +
+        value.slice(12);
 
-  return formatted;
-};
+    return formatted;
+  };
 
   const { control, handleSubmit, reset } =
     useForm<VisitorFormValues>({
@@ -108,8 +104,6 @@ const formatCnicInput = (text: string) => {
         cnic: '',
       },
     });
-
-  /* ---------------- RESET ON OPEN ---------------- */
 
   useEffect(() => {
     if (visible) {
@@ -121,103 +115,111 @@ const formatCnicInput = (text: string) => {
     }
   }, [visible, initialValues, reset]);
 
-  if (!visible) return null;
-
   return (
-    <View style={styles.overlay}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.scrollContainer}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1, justifyContent: 'flex-end' }}
         >
-          <View style={styles.sheet}>
-            <Text style={appstyles.screenTitle}>
-              {initialValues ? 'Edit Visitor' : 'Add Visitor'}
-            </Text>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.scrollContainer}
+          >
+            <View style={styles.sheet}>
+              <Text style={appstyles.screenTitle}>
+                {initialValues ? 'Edit Visitor' : 'Add Visitor'}
+              </Text>
 
-            {/* NAME */}
-            {fields.includes('name') && (
-              <Controller
-                control={control}
-                name="name"
-                rules={{ required: 'Name is required' }}
-                render={({ field, fieldState }) => (
-                  <FormInput
-                    label="Full Name"
-                    placeholder="Enter full name"
-                    value={field.value}
-                    onChangeText={field.onChange}
-                    onBlur={field.onBlur}
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
-            )}
+              {/* NAME */}
+              {fields.includes('name') && (
+                <Controller
+                  control={control}
+                  name="name"
+                  rules={{ required: 'Name is required' }}
+                  render={({ field, fieldState }) => (
+                    <FormInput
+                      label="Full Name"
+                      placeholder="Enter full name"
+                      value={field.value}
+                      onChangeText={field.onChange}
+                      onBlur={field.onBlur}
+                      error={fieldState.error?.message}
+                    />
+                  )}
+                />
+              )}
 
-            {/* PHONE */}
-            {fields.includes('phone') && (
-              <Controller
-                control={control}
-                name="phone"
-               rules={{ required: false }}
-                render={({ field, fieldState }) => (
-                  <FormInput
-                    label="Phone Number"
-                    placeholder="03xx-xxxxxxx"
-                    value={field.value ?? ''}
-                   onChangeText={(text) =>
-          field.onChange(formatPhoneInput(text))
-        }
-                    onBlur={field.onBlur}
-                    keyboardType="phone-pad"
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
-            )}
-
-            {/* CNIC */}
-            {fields.includes('cnic') && (
-              <Controller
-                control={control}
-                name="cnic"
-                rules={{ required: 'CNIC is required' }}
-                render={({ field, fieldState }) => (
-                  <FormInput
-                    label="CNIC"
-                    placeholder="xxxxx-xxxxxxx-x"
-                    value={field.value ?? ''}
+              {/* PHONE */}
+              {fields.includes('phone') && (
+                <Controller
+                  control={control}
+                  name="phone"
+                  render={({ field, fieldState }) => (
+                    <FormInput
+                      label="Phone Number"
+                      placeholder="03xx-xxxxxxx"
+                      value={field.value ?? ''}
                       onChangeText={(text) =>
-          field.onChange(formatCnicInput(text))
-        }
-                    onBlur={field.onBlur}
-                    keyboardType="numeric"
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
-            )}
+                        field.onChange(formatPhoneInput(text))
+                      }
+                      onBlur={field.onBlur}
+                      keyboardType="phone-pad"
+                      error={fieldState.error?.message}
+                    />
+                  )}
+                />
+              )}
 
-            {/* SAVE */}
-            <Button
-              title={
-                initialValues ? 'Update Visitor' : 'Save Visitor'
-              }
-              onPress={handleSubmit(onSubmit)}
-            />
+              {/* CNIC */}
+              {fields.includes('cnic') && (
+                <Controller
+                  control={control}
+                  name="cnic"
+                  rules={{ required: 'CNIC is required' }}
+                  render={({ field, fieldState }) => (
+                    <FormInput
+                      label="CNIC"
+                      placeholder="xxxxx-xxxxxxx-x"
+                      value={field.value ?? ''}
+                      onChangeText={(text) =>
+                        field.onChange(formatCnicInput(text))
+                      }
+                      onBlur={field.onBlur}
+                      keyboardType="numeric"
+                      error={fieldState.error?.message}
+                    />
+                  )}
+                />
+              )}
 
-            {/* CANCEL */}
-            <Text style={appstyles.cancel} onPress={onClose}>
-              Cancel
-            </Text>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+              {/* SAVE */}
+              {/* <Button
+                title={
+                  initialValues ? 'Update Visitor' : 'Save Visitor'
+                }
+                onPress={handleSubmit(onSubmit)}
+              /> */}
+
+              <Button
+  title={isEditing ? 'Update Visitor' : 'Save Visitor'}
+  onPress={handleSubmit(onSubmit)}
+/>
+
+              {/* CANCEL */}
+              <Text style={appstyles.cancel} onPress={onClose}>
+                Cancel
+              </Text>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
   );
 }
 
@@ -278,16 +280,18 @@ const FormInput = ({
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
     overlay: {
-      ...StyleSheet.absoluteFillObject,
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
       backgroundColor: 'rgba(0,0,0,0.45)',
-      // justifyContent: 'flex-end',
+      justifyContent: 'flex-end',
       zIndex: 1000,
-      marginBottom: 80 
     },
     scrollContainer: {
       flexGrow: 1,
       justifyContent: 'flex-end',
-      
     },
     sheet: {
       backgroundColor: theme.colors.cardBg,
@@ -295,5 +299,4 @@ const createStyles = (theme: Theme) =>
       borderTopRightRadius: 24,
       padding: 20,
     },
-  
   });

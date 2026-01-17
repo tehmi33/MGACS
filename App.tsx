@@ -91,10 +91,19 @@ const App = () => {
     if (!notificationsAllowed) return;
     const unsubscribe = messaging().onMessage(async remoteMessage => {
       Alert.alert(
-        'New Notification',
-        remoteMessage?.notification?.title || 'Message received'
-      );
-      const payload = remoteMessage.data;
+      remoteMessage?.notification?.title ?? 'New Notification',
+      remoteMessage?.notification?.body ?? 'Message received'
+    );
+// console.log("🚀 ~ file: App.tsx ~ line 95 ~ remoteMessage", remoteMessage)
+const visitId = remoteMessage?.data?.id;
+
+globalThis.visitId =
+  typeof visitId === 'string' ? visitId : undefined;
+  console.log("🚀 ~ file: App.tsx ~ line 97 ~ globalvisitId", globalThis.visitId)
+
+    
+ const payload = remoteMessage.data;
+      
 
       if (payload?.action && navigationRef.isReady()) {
         if (navigationRef.isReady()) {
@@ -120,7 +129,12 @@ const App = () => {
 
   useEffect(() => {
     messaging().onNotificationOpenedApp(remoteMessage => {
+      const visitId = remoteMessage?.data?.id;
+
+globalThis.visitId =
+  typeof visitId === 'string' ? visitId : undefined;
       const payload = remoteMessage?.data;
+
       if (payload?.action && navigationRef.isReady()) {
         if (navigationRef.isReady()) {
           handleNotification(
@@ -141,6 +155,10 @@ const App = () => {
     messaging()
       .getInitialNotification()
       .then(remoteMessage => {
+        const visitId = remoteMessage?.data?.id;
+
+globalThis.visitId =
+  typeof visitId === 'string' ? visitId : undefined;
         const payload = remoteMessage?.data;
         if (!payload?.action) return;
 
@@ -200,7 +218,13 @@ const App = () => {
   }, [notificationsAllowed]);
 
 
+useEffect(() => {
+    const timer = setTimeout(() => {
+      BootSplash.hide({ fade: true });
+    }, 3000);
 
+    return () => clearTimeout(timer);
+  }, []);
   if (checkingPermission || !notificationsAllowed) {
     return null;
   }
@@ -211,11 +235,7 @@ const App = () => {
         <SafeAreaProvider>
          
             <NavigationContainer ref={navigationRef} theme={TransparentNavTheme}
-           onReady={() => {
-  setTimeout(() => {
-    BootSplash.hide({ fade: true });
-  }, 2000);
-}}
+           
             >
               <RootStack />
             </NavigationContainer>

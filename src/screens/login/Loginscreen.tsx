@@ -34,30 +34,37 @@ const LoginScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   // ✅ LIVE AUTO FORMAT: +92-300-1234567
-  const formatPhoneInput = (text: string) => {
-    let digits = text.replace(/\D/g, '');
+ const formatPhoneInput = (text: string) => {
+  // Extract digits only
+  let digits = text.replace(/\D/g, '');
 
-    // Remove leading 92 if user pastes full number
-    if (digits.startsWith('92')) {
-      digits = digits.slice(2);
-    }
+  // Remove country code if pasted
+  if (digits.startsWith('92')) digits = digits.slice(2);
 
-    // Remove leading 0
-    if (digits.startsWith('0')) {
-      digits = digits.slice(1);
-    }
+  // Remove leading zero
+  if (digits.startsWith('0')) digits = digits.slice(1);
 
-    let formatted = '+92';
+  // 🚨 Force first digit to be 3
+  if (digits.length > 0 && digits[0] !== '3') {
+    digits = '3' + digits.slice(1);
+  }
 
-    if (digits.length > 0) {
-      formatted += '-' + digits.substring(0, 3);
-    }
-    if (digits.length > 3) {
-      formatted += '-' + digits.substring(3, 10);
-    }
+  // Limit to 10 digits (3XX + 7)
+  digits = digits.slice(0, 10);
 
-    return formatted;
-  };
+  let formatted = '+92';
+
+  if (digits.length > 0) {
+    formatted += '-' + digits.substring(0, 3);
+  }
+
+  if (digits.length > 3) {
+    formatted += '-' + digits.substring(3, 10);
+  }
+
+  return formatted;
+};
+
 
   const handleLogin = async () => {
     let isValid = true;

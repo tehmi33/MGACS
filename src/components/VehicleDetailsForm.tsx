@@ -7,9 +7,15 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   TextInput,
+  Modal,
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
-import { Vehicle, VehicleMakeOption , VehicleModelOption, VehicleColorOption} from '../types/VisitorRequest';
+import {
+  Vehicle,
+  VehicleMakeOption,
+  VehicleModelOption,
+  VehicleColorOption,
+} from '../types/VisitorRequest';
 import { useTheme } from '../theme/ThemeContext';
 import { AppStyles } from '../styles/AppStyles';
 import { Theme } from '../theme/themes';
@@ -19,18 +25,17 @@ import Dropdown from './Dropdown';
 /* ---------------- TYPES ---------------- */
 
 export type VehicleFormValues = {
-
   plateNo: string;
   make?: string;
   color?: string;
   model?: string;
 };
-type VehicleType = 1| 2 ;
+
 type Props = {
   visible: boolean;
   initialValues?: Vehicle;
   vehicleMakeOptions: VehicleMakeOption[];
-    vehicleModelOptions: VehicleModelOption[];
+  vehicleModelOptions: VehicleModelOption[];
   vehicleColorOptions: VehicleColorOption[];
   onClose: () => void;
   onSubmit: (data: VehicleFormValues) => void;
@@ -41,16 +46,16 @@ type Props = {
 export default function VehicleDetailsForm({
   visible,
   initialValues,
-   vehicleMakeOptions,
-   vehicleModelOptions,
+  vehicleMakeOptions,
+  vehicleModelOptions,
   vehicleColorOptions,
   onClose,
   onSubmit,
 }: Props) {
-  
   const theme = useTheme();
   const appstyles = AppStyles(theme);
   const styles = createStyles(theme);
+ 
 
   const { control, handleSubmit, reset } =
     useForm<VehicleFormValues>({
@@ -73,120 +78,100 @@ export default function VehicleDetailsForm({
     }
   }, [visible, initialValues, reset]);
 
-  if (!visible) return null;
-
   return (
-    <View style={styles.overlay}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        style={styles.keyboard}
-      >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.scrollContainer}
-        >
-          <View style={styles.sheet}>
-            {/* HEADER */}
-            <View style={styles.header}>
-              <Text style={appstyles.screenTitle}>
-                {initialValues ? 'Edit Vehicle' : 'Vehicle Details'}
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <KeyboardAvoidingView
+  behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+  keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+  style={styles.keyboard}
+>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.scrollContainer}
+          >
+            <View style={styles.sheet}>
+              {/* HEADER */}
+              <View>
+                <Text style={appstyles.screenTitle}>
+                  {initialValues ? 'Edit Vehicle' : 'Vehicle Details'}
+                </Text>
+              </View>
+
+              {/* PLATE NUMBER */}
+              <Controller
+                control={control}
+                name="plateNo"
+                rules={{ required: 'Plate number is required' }}
+                render={({ field, fieldState }) => (
+                  <FormInput
+                    label="Plate Number"
+                    placeholder="ABC-123 or ABC1234"
+                    value={field.value}
+                    onChangeText={field.onChange}
+                    onBlur={field.onBlur}
+                    autoCapitalize="characters"
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
+
+              {/* MAKE */}
+              <Text style={[appstyles.mutedText, { marginTop: 5 }]}>
+                Make
+              </Text>
+              <Dropdown
+                control={control}
+                name="make"
+                placeholder="Select vehicle make"
+                data={vehicleMakeOptions ?? []}
+                rules={{ required: 'Vehicle make is required' }}
+              />
+
+              {/* MODEL */}
+              <Text style={[appstyles.mutedText, { marginTop: 5 }]}>
+                Model
+              </Text>
+              <Dropdown
+                control={control}
+                name="model"
+                placeholder="Select vehicle model"
+                data={vehicleModelOptions}
+              />
+
+              {/* COLOR */}
+              <Text style={[appstyles.mutedText, { marginTop: 5 }]}>
+                Color
+              </Text>
+              <Dropdown
+                control={control}
+                name="color"
+                placeholder="Select vehicle color"
+                data={vehicleColorOptions}
+              />
+
+              {/* SAVE */}
+              <Button
+                title={
+                  initialValues ? 'Update Vehicle' : 'Save Vehicle'
+                }
+                onPress={handleSubmit(onSubmit)}
+              />
+
+              {/* CANCEL */}
+              <Text style={appstyles.cancel} onPress={onClose}>
+                Cancel
               </Text>
             </View>
-
-            {/* PLATE NUMBER */}
-            <Controller
-              control={control}
-              name="plateNo"
-              rules={{ required: 'Plate number is required' }}
-              render={({ field, fieldState }) => (
-                <FormInput
-                  label="Plate Number"
-                  placeholder="ABC-123 or ABC1234"
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                  autoCapitalize="characters"
-                  error={fieldState.error?.message}
-                />
-              )}
-            />
-
-            {/* MAKE */}
-<Text style={[appstyles.mutedText, { marginTop: 5 }]}>Make</Text>
-
-<Dropdown
-  control={control}
-  name="make"
-  placeholder="Select vehicle make"
-  // data={VEHICLE_MAKES}
-data={vehicleMakeOptions ?? []}
-  rules={{ required: 'Vehicle make is required' }}
-/>
-<Text style={[appstyles.mutedText, { marginTop: 5 }]}>Model</Text>
-<Dropdown
-  control={control}
-  name="model"
-  placeholder="Select vehicle model"
-  data={vehicleModelOptions}
-/>
-
-<Text style={[appstyles.mutedText, { marginTop: 5 }]}>Color</Text>
-<Dropdown
-  control={control}
-  name="color"
-  placeholder="Select vehicle color"
-  data={vehicleColorOptions}
-/>
-
-            {/* MODEL */}
-            {/* <Controller
-              control={control}
-              name="model"
-              render={({ field, fieldState }) => (
-                <FormInput
-                  label="Model"
-                  placeholder="Camry, Civic"
-                  value={field.value ?? ''}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                  error={fieldState.error?.message}
-                />
-              )}
-            /> */}
-
-            {/* COLOR */}
-            {/* <Controller
-              control={control}
-              name="color"
-              render={({ field, fieldState }) => (
-                <FormInput
-                  label="Color"
-                  placeholder="White, Black, Silver"
-                  value={field.value ?? ''}
-                  onChangeText={field.onChange}
-                  onBlur={field.onBlur}
-                  error={fieldState.error?.message}
-                />
-              )}
-            /> */}
-
-            {/* SAVE */}
-            <Button
-              title={
-                initialValues ? 'Update Vehicle' : 'Save Vehicle'
-              }
-              onPress={handleSubmit(onSubmit)}
-            />
-
-            {/* CANCEL */}
-            <Text style={appstyles.cancel} onPress={onClose}>
-              Cancel
-            </Text>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
   );
 }
 
@@ -217,15 +202,13 @@ const FormInput = ({
   const appstyles = AppStyles(theme);
 
   return (
-    <View >
+    <View>
       <Text style={appstyles.mutedText}>{label}</Text>
 
       <View
         style={[
           appstyles.inputContainer,
-          
           error && appstyles.errorBorder,
-        
         ]}
       >
         <TextInput
@@ -251,12 +234,16 @@ const FormInput = ({
 
 const createStyles = (theme: Theme) =>
   StyleSheet.create({
-    overlay: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(0,0,0,0.45)',
-      justifyContent: 'flex-end',
-      zIndex: 100,
-    },
+  overlay: {
+  position: 'absolute',
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
+  backgroundColor: 'rgba(0,0,0,0.45)',
+  justifyContent: 'flex-end',
+},
+
     keyboard: {
       flex: 1,
       justifyContent: 'flex-end',
@@ -271,9 +258,6 @@ const createStyles = (theme: Theme) =>
       borderTopRightRadius: 24,
       padding: 20,
       paddingBottom: Platform.OS === 'ios' ? 40 : 24,
-    },
-    header: {
-      // marginBottom: 16,
     },
     
   });

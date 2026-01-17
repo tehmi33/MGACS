@@ -1,12 +1,13 @@
 import { StyleSheet } from 'react-native';
 import { Theme } from '../theme/themes';
 
+
 export const AppStyles = (theme: Theme) =>
   StyleSheet.create({
     container: {
       flex: 1,
       // backgroundColor: theme.colors.screenBg,
-      padding: 20,
+      paddingHorizontal: 20,
     },
 
     scrollContent: {
@@ -124,4 +125,13 @@ export const AppStyles = (theme: Theme) =>
       color: theme.colors.muted,
       fontWeight: '600',
     },
+    backButton: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: 'rgba(255,255,255,0.18)',
+},
+
   });
