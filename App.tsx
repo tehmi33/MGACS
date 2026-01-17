@@ -163,7 +163,7 @@ globalThis.visitId =
         if (!payload?.action) return;
 
         // ❗ DO NOT navigate here
-        setPendingNotification({
+        setPendingNotification({ 
           action: payload.action,
           data: payload,
         });

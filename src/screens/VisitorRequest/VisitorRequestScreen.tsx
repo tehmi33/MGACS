@@ -391,27 +391,39 @@ setEditingVehicleId(null);
   } 
     catch (error: any) {
   const apiErrors = error?.response?.data?.errors;
-  const message =
+  const fallbackMessage =
     error?.response?.data?.message ||
     'Something went wrong. Please check your input.';
 
-  // 🔴 ANDROID ONLY TOAST
-  if (Platform.OS === 'android') {
-    ToastAndroid.show(message, ToastAndroid.LONG);
+  let toastMessage = fallbackMessage;
+
+  // ✅ Collect ALL API validation errors into ONE toast
+  if (apiErrors && typeof apiErrors === 'object') {
+    const messages: string[] = [];
+
+    Object.values(apiErrors).forEach(value => {
+      if (Array.isArray(value)) {
+        value.forEach(v => messages.push(String(v)));
+      } else if (typeof value === 'string') {
+        messages.push(value);
+      }
+    });
+
+    if (messages.length > 0) {
+      toastMessage = messages.join('\n');
+    }
   }
 
-  // Still map errors to form (for red rows & inputs)
-  if (apiErrors && typeof apiErrors === 'object') {
-    Object.entries(apiErrors).forEach(([path, messages]) => {
-      const formPath = mapApiErrorPathToFormPath(path);
-
-      setError(formPath as any, {
-        type: 'server',
-        message: Array.isArray(messages) ? messages[0] : String(messages),
-      });
-    });
+  // 🔴 ANDROID ONLY – ONE TOAST, ONE TIME
+  if (Platform.OS === 'android') {
+    ToastAndroid.showWithGravity(
+      toastMessage,
+      ToastAndroid.LONG,
+      ToastAndroid.TOP
+    );
   }
 }
+
 
 };
 
@@ -422,7 +434,7 @@ setEditingVehicleId(null);
 
 
   return (
-   <View style={appstyles.container}>
+   <ScrollView style={appstyles.container}  keyboardShouldPersistTaps="handled">
       {/* FIXED FORM */}  
    <View style={{backgroundColor:'transparent'}}>
         <FormCard title="Visitor Request" subtitle="Add visit information">
@@ -756,7 +768,7 @@ setEditingVehicleId(null);
         onSubmit={handleSubmitVehicle}
       />
 
-    </View>
+    </ScrollView>
   );
 }
 

@@ -228,7 +228,7 @@ const formatTime = (dateString?: string) => {
 
 
   return (
-    <View style={[app.container, { padding: 0 }]}>
+    <View style={{flex:1, }}>
       <Header
       navigation={navigation}
         statusName={visit.model_status?.name}

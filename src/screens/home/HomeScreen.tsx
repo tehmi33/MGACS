@@ -179,7 +179,7 @@ Accuracy: ${location.accuracy} m
           { icon: "account-plus", label: "Create Visitor Request",screen: "Visitors"},
           { icon: "qrcode", label: "My Passes",  screen: "VisitorInfo", },
           { icon: "car", label: "Vehicles/Visitors",   screen: "VisitorInfo",},
-          { icon: "alert-octagon", label: "Violations / Challans", },
+          { icon: "alert-octagon", label: "Violations / Challans",  screen: "VisitorInfo",},
         ].map((item, index) => (
         <Pressable
   key={index}
