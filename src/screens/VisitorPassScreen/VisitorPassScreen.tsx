@@ -8,7 +8,9 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Pressable
+  Pressable,
+  StatusBar,
+  Platform
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Animated, {
@@ -27,7 +29,8 @@ import api from '../../api/client';
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 const { height } = Dimensions.get('window');
-
+const STATUS_BAR_HEIGHT =
+  Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0;
 /* ========================================================= */
 /* ===================== MAIN SCREEN ======================= */
 /* ========================================================= */
@@ -228,7 +231,8 @@ const formatTime = (dateString?: string) => {
 
 
   return (
-    <View style={{flex:1, }}>
+
+    <View style={{flex:1}}>
       <Header
       navigation={navigation}
         statusName={visit.model_status?.name}
@@ -374,7 +378,7 @@ const Header = ({ statusName, statusColor, created_at, navigation }: any) => {
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          marginTop: -10, // lifts content without changing padding
+          paddingTop: STATUS_BAR_HEIGHT + 20 ,
           zIndex: 10,
         }}
       >
@@ -606,11 +610,12 @@ const badges = [
 const createStyles = (theme: any) =>
   StyleSheet.create({
     header: {
-      paddingTop: 60,
+      // paddingTop: 60,
       paddingBottom: 100,
       paddingHorizontal: 20,
       borderBottomLeftRadius: 30,
       borderBottomRightRadius: 30,
+      height:'30%'
     },
 
   
@@ -650,7 +655,7 @@ const createStyles = (theme: any) =>
       borderRadius: 24,
       padding: 14,
       elevation: 8,
-      flex: 1,
+      // flex: 1,
     },
 
     qrRow: { flexDirection: 'row', gap: 12, marginTop: 12

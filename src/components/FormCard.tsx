@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, StatusBar, Platform } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import { AppStyles } from '../styles/AppStyles';
 import { Theme } from '../theme/themes';
@@ -29,7 +29,7 @@ export default function FormCard({
       <View style={styles.header}>
         {/* BACK BUTTON */}
         <Pressable
-          onPress={() => navigation?.goBack?.()}
+          onPress={() => navigation.goBack()}
           style={({ pressed }) => [
             styles.backButton,
             pressed && { opacity: 0.7 },
@@ -73,7 +73,6 @@ const createStyles = (theme: Theme) =>
       padding: 10,
       backgroundColor: theme.colors.primaryLight + '22',
       borderRadius: 10,
-      
     },
     backButton: {
       width: 36,

@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   Animated,
   ScrollView,
-  ToastAndroid, Platform
+  ToastAndroid, Platform,
+  StatusBar,
+  KeyboardAvoidingView
 } from 'react-native';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -25,7 +27,7 @@ import api from "../../api/client";
 import { mapVisitToFormData } from "../../api/visit.mapper";
 import { useVisitCreate } from "../../hooks/useVisitCreate";
 import { useNavigation } from '@react-navigation/native';
-
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 
 import {
@@ -45,7 +47,8 @@ import VehicleDetailsForm, {
 
 import { compact } from '../../utils/helpers';
 import IconSelectorModal from '../../components/CardSelectorModal';
-
+const STATUS_BAR_HEIGHT =
+  Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0;
 
 /* ---------------- FORM SCHEMA ---------------- */
 
@@ -389,7 +392,7 @@ setEditingVehicleId(null);
     console.log("✅ VISIT REQUEST SUCCESS:", data);
       navigation.navigate('VisitorPass', { visitId });
   } 
-    catch (error: any) {
+   catch (error: any) {
   const apiErrors = error?.response?.data?.errors;
   const fallbackMessage =
     error?.response?.data?.message ||
@@ -423,8 +426,6 @@ setEditingVehicleId(null);
     );
   }
 }
-
-
 };
 
 
@@ -434,10 +435,20 @@ setEditingVehicleId(null);
 
 
   return (
-   <ScrollView style={appstyles.container}  keyboardShouldPersistTaps="handled">
+<KeyboardAwareScrollView
+    contentContainerStyle={{
+      paddingBottom: -600, 
+      paddingHorizontal: 20,
+    }}
+    enableOnAndroid={true}
+    extraScrollHeight={300}  // IMPORTANT
+    keyboardShouldPersistTaps="handled"
+    enableAutomaticScroll={true}
+  >
+    <StatusBar barStyle='dark-content' translucent backgroundColor={'transparent'}/>
       {/* FIXED FORM */}  
-   <View style={{backgroundColor:'transparent'}}>
-        <FormCard title="Visitor Request" subtitle="Add visit information">
+   <View style={{backgroundColor:'transparent', paddingTop: STATUS_BAR_HEIGHT ,}}>
+        <FormCard title="Visitor Request" subtitle="Add visit information" >
      
           
         
@@ -493,7 +504,7 @@ setEditingVehicleId(null);
       </View>
 
       {/* VISITORS */}
-      <ScrollView contentContainerStyle={[appstyles.scrollContent]}>
+      <View>
        <Section
   title="Visitors"
   rightComponent={
@@ -689,7 +700,7 @@ setEditingVehicleId(null);
       </TouchableOpacity>
 
 
-      </ScrollView>
+      </View>
 
      
       {/* SUBMIT */}
@@ -767,8 +778,7 @@ setEditingVehicleId(null);
         }}
         onSubmit={handleSubmitVehicle}
       />
-
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

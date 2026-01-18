@@ -4,6 +4,8 @@ import LinearGradient from "react-native-linear-gradient";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useTheme } from "../theme/ThemeContext";
 const { height } = Dimensions.get("window");
+const STATUS_BAR_HEIGHT =
+  Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0;
 type Props = {
   title: string;
   subtitle?: string;
@@ -81,7 +83,7 @@ export default Header;
 const createStyles = (theme: any) =>
   StyleSheet.create({
    header: {
-  // paddingTop: STATUS_BAR_HEIGHT ,
+  paddingTop: STATUS_BAR_HEIGHT ,
 // paddingTop:20,
   paddingBottom: height * 0.10,
   paddingHorizontal: 20,

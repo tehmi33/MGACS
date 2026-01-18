@@ -61,12 +61,14 @@ useFocusEffect(
       style={appstyles.container} 
     >
       {/* <StatusBar barStyle="dark-content" translucent backgroundColor={theme.colors.white}/> */}
+      <View style={{backgroundColor:'transparent', paddingTop: STATUS_BAR_HEIGHT ,}}>
       <FormCard
         title="Visitor Request"
         subtitle="Review visitor information"
         children={null}
        
       />
+      </View>
       <View></View>
 <ScrollView contentContainerStyle={appstyles.scrollContent}>
       {visits.map((visit) => (

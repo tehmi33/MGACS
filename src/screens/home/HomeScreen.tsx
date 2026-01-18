@@ -33,8 +33,6 @@ import Header from "../../components/Header";
 import LinearGradient from "react-native-linear-gradient";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useTheme } from "../../theme//ThemeContext";
-const STATUS_BAR_HEIGHT =
-  Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0;
 /* Adjust to your navigator */
 export type BottomTabParamList = {
   Home: undefined;
@@ -130,9 +128,9 @@ Accuracy: ${location.accuracy} m
  
  return (
   <View style={styles.screen}>
-    {/* <StatusBar barStyle="light-content" translucent backgroundColor={theme.colors.primary}/> */}
+    <StatusBar barStyle='dark-content' translucent backgroundColor={'transparent'}/>
     <Header
-      title={`Welcome, ${user?.name ?? "User"}`}
+      title={`Welcome ${user?.name ?? "User"}`}
       onMenuPress={() => navigation.openDrawer?.()}
       onNotificationPress={() => Alert.alert("Notifications")}
       onAlertPress={() => Alert.alert("Alerts")}
@@ -244,13 +242,12 @@ const createStyles = (theme: any) =>
     screen: {
       flex: 1,
       backgroundColor: theme.colors.background,
-      // paddingTop: STATUS_BAR_HEIGHT
     },
 
     container: {
       paddingHorizontal: 20,
       paddingBottom: 20,
-      marginTop: height * 0.20,
+      marginTop: height * 0.165,
     },
 
     sectionTitle: {

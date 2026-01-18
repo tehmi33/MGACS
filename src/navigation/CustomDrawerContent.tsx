@@ -40,8 +40,8 @@ const handleUntrust = () => {
       {/* Bottom buttons */}
       <View style={styles.footer}>
         <TouchableOpacity style={styles.actionBtn} onPress={handleUntrust}>
-          <Icon name="security" size={22} color="#F44336" />
-          <Text style={styles.actionText}>Untrust Devices</Text>
+          <Icon name="delete" size={22} color="#F44336" />
+          <Text style={styles.actionText}>Delete Account</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionBtn} onPress={handleLogout}>
